@@ -123,7 +123,8 @@ const Home: React.FC = () => {
                         <span className="w-3 h-3 bg-red-600 mr-3 animate-pulse border-2 border-black"></span>
                         100% Client-Side
                     </div>
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-display leading-normal mb-6 [text-shadow:_2px_2px_0px_rgba(0,0,0,0.3)] dark:[text-shadow:_2px_2px_0px_#000]">
+                    {/* UPDATED: Uses utility classes instead of arbitrary values */}
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-display leading-normal mb-6 text-shadow dark:text-shadow-light">
                         Build Better Images<br />
                         <span className="text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 px-2 box-decoration-clone">
                             With AI Blocks
