@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import Resize from './pages/Resize';
 import Convert from './pages/Convert';
-import RemBg from './pages/RemBg';
+import RemBg from './pages/Rembg';
 import Upscaler from './pages/Upscaler';
 import './index.css';
 
