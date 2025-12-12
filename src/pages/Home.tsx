@@ -28,7 +28,7 @@ const Home: React.FC = () => {
             color: 'is-warning',
             icon: '✂️',
             path: '/rembg',
-            comingSoon: true,
+            comingSoon: false,
         },
         {
             title: 'UPSCALE 4K',
