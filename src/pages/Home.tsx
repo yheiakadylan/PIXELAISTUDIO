@@ -2,11 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CraftModal from '../components/CraftModal';
 import PixelCharacter from '../components/PixelCharacter';
+import FloatingClouds from '../components/FloatingClouds';
+import CursorTrail from '../components/CursorTrail';
+import AchievementPopup, { useAchievements } from '../components/AchievementPopup';
+import MinecraftSword from '../components/MinecraftSword';
 
 const Home: React.FC = () => {
     const navigate = useNavigate();
     const [showCraftModal, setShowCraftModal] = useState(false);
     const [darkMode, setDarkMode] = useState(false);
+    const [logoClicks, setLogoClicks] = useState(0);
+    const [konamiIndex, setKonamiIndex] = useState(0);
+    const [superMode, setSuperMode] = useState(false);
+    const { currentAchievement, unlockAchievement, clearCurrentAchievement } = useAchievements();
+
+    // Konami code: ↑ ↑ ↓ ↓ ← → ← → B A
+    const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
 
     useEffect(() => {
         // Check for saved dark mode preference
@@ -15,7 +26,27 @@ const Home: React.FC = () => {
         if (savedMode) {
             document.documentElement.classList.add('dark');
         }
-    }, []);
+
+        // Konami code listener
+        const handleKeyDown = (e: KeyboardEvent) => {
+            const key = e.key.toLowerCase();
+            if (key === konamiCode[konamiIndex]) {
+                const newIndex = konamiIndex + 1;
+                setKonamiIndex(newIndex);
+                if (newIndex === konamiCode.length) {
+                    setSuperMode(true);
+                    unlockAchievement('konami_master');
+                    setKonamiIndex(0);
+                    setTimeout(() => setSuperMode(false), 10000);
+                }
+            } else {
+                setKonamiIndex(0);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [konamiIndex]);
 
     const toggleDarkMode = () => {
         const newMode = !darkMode;
@@ -89,7 +120,17 @@ const Home: React.FC = () => {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between h-20 items-center">
                         <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 bg-blue-600 border-4 border-black dark:border-white flex items-center justify-center text-white shadow-retro dark:shadow-none hover:translate-x-1 hover:translate-y-1 hover:shadow-retro-active transition-all duration-200 cursor-pointer animate-bounceIn">
+                            <div
+                                className={`w-12 h-12 bg-blue-600 border-4 border-black dark:border-white flex items-center justify-center text-white shadow-retro dark:shadow-none hover:translate-x-1 hover:translate-y-1 hover:shadow-retro-active transition-all duration-200 cursor-pointer animate-bounceIn ${superMode ? 'animate-spin-slow' : ''}`}
+                                onClick={() => {
+                                    const newClicks = logoClicks + 1;
+                                    setLogoClicks(newClicks);
+                                    if (newClicks === 10) {
+                                        unlockAchievement('logo_lover');
+                                        setLogoClicks(0);
+                                    }
+                                }}
+                            >
                                 <span className="material-symbols-outlined text-2xl">auto_fix_high</span>
                             </div>
                             <span className="font-display text-xs md:text-sm tracking-tighter leading-tight mt-1 animate-slideInLeft">
@@ -217,6 +258,21 @@ const Home: React.FC = () => {
 
             {/* Animated Character */}
             <PixelCharacter />
+
+            {/* Floating Clouds */}
+            <FloatingClouds />
+
+            {/* Cursor Trail */}
+            {!superMode && <CursorTrail />}
+
+            {/* Minecraft Sword Click Effect */}
+            <MinecraftSword />
+
+            {/* Achievement Popup */}
+            <AchievementPopup
+                achievement={currentAchievement}
+                onClose={clearCurrentAchievement}
+            />
         </div>
     );
 };

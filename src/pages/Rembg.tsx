@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDPIInjector } from '../hooks/useDPIInjector';
-import { imageToCanvas, canvasToBlob, getExtensionFromMimeType, createThumbnail } from '../utils/canvasHelpers';
+import { imageToCanvas, canvasToBlob, getExtensionFromMimeType } from '../utils/canvasHelpers';
 import { removeBackground } from '@imgly/background-removal';
 
 interface ProcessedImage {

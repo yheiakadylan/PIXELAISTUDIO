@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDPIInjector } from '../hooks/useDPIInjector';
 import { imageToCanvas, resizeCanvas, canvasToBlob, getExtensionFromMimeType, createThumbnail } from '../utils/canvasHelpers';
+import Confetti from '../components/Confetti';
 
 interface UploadedImage {
     id: string;
@@ -27,6 +28,7 @@ const Resize: React.FC = () => {
     const [podMode, setPodMode] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const hasAutoLoaded = useRef(false);
+    const [showConfetti, setShowConfetti] = useState(false);
     const { injectDPI } = useDPIInjector();
 
     // Auto-load files from navigation state (Craft Modal)
@@ -454,6 +456,9 @@ const Resize: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            {/* Confetti */}
+            <Confetti active={showConfetti} onComplete={() => setShowConfetti(false)} />
         </div>
     );
 };
