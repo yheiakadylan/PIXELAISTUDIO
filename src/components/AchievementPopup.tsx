@@ -58,7 +58,7 @@ export const useAchievements = () => {
         { id: 'resize_pro', title: 'Resize Pro!', description: 'Resized 10 images', icon: '📐', unlocked: false },
         { id: 'converter', title: 'Format Converter!', description: 'Converted 5 images', icon: '🔄', unlocked: false },
         { id: 'logo_lover', title: 'Logo Lover!', description: 'Clicked the logo 10 times', icon: '💙', unlocked: false },
-        { id: 'konami_master', title: 'Konami Master!', description: 'Discovered the secret code!', icon: '🎮', unlocked: false },
+        { id: 'super_master', title: 'Super Master!', description: 'Activated Super Mode! (Press S 3x)', icon: '⚡', unlocked: false },
     ]);
 
     const [currentAchievement, setCurrentAchievement] = useState<Achievement | null>(null);

@@ -6,18 +6,17 @@ import FloatingClouds from '../components/FloatingClouds';
 import CursorTrail from '../components/CursorTrail';
 import AchievementPopup, { useAchievements } from '../components/AchievementPopup';
 import MinecraftSword from '../components/MinecraftSword';
+import Typewriter from '../components/Typewriter';
 
 const Home: React.FC = () => {
     const navigate = useNavigate();
     const [showCraftModal, setShowCraftModal] = useState(false);
     const [darkMode, setDarkMode] = useState(false);
     const [logoClicks, setLogoClicks] = useState(0);
-    const [konamiIndex, setKonamiIndex] = useState(0);
+    const [sKeyPresses, setSKeyPresses] = useState(0);
     const [superMode, setSuperMode] = useState(false);
+    const [showTitle, setShowTitle] = useState(false);
     const { currentAchievement, unlockAchievement, clearCurrentAchievement } = useAchievements();
-
-    // Konami code: ↑ ↑ ↓ ↓ ← → ← → B A
-    const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
 
     useEffect(() => {
         // Check for saved dark mode preference
@@ -27,26 +26,35 @@ const Home: React.FC = () => {
             document.documentElement.classList.add('dark');
         }
 
-        // Konami code listener
+        // Super Mode activation: Press "S" 3 times
         const handleKeyDown = (e: KeyboardEvent) => {
-            const key = e.key.toLowerCase();
-            if (key === konamiCode[konamiIndex]) {
-                const newIndex = konamiIndex + 1;
-                setKonamiIndex(newIndex);
-                if (newIndex === konamiCode.length) {
+            if (e.key.toLowerCase() === 's') {
+                const newCount = sKeyPresses + 1;
+                setSKeyPresses(newCount);
+
+                if (newCount >= 3) {
                     setSuperMode(true);
-                    unlockAchievement('konami_master');
-                    setKonamiIndex(0);
+                    unlockAchievement('super_master');
+                    setSKeyPresses(0);
+
+                    // Show for 10 seconds
                     setTimeout(() => setSuperMode(false), 10000);
                 }
-            } else {
-                setKonamiIndex(0);
+
+                // Reset after 2 seconds if not completed
+                setTimeout(() => setSKeyPresses(0), 2000);
             }
         };
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [konamiIndex]);
+    }, [sKeyPresses]);
+
+    // Show title after a short delay
+    useEffect(() => {
+        const timer = setTimeout(() => setShowTitle(true), 800);
+        return () => clearTimeout(timer);
+    }, []);
 
     const toggleDarkMode = () => {
         const newMode = !darkMode;
@@ -168,11 +176,18 @@ const Home: React.FC = () => {
                         100% Client-Side
                     </div>
                     {/* UPDATED: Uses utility classes instead of arbitrary values */}
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-display leading-normal mb-6 text-shadow dark:text-shadow-light animate-scaleIn">
-                        Build Better Images<br />
-                        <span className="text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 px-2 box-decoration-clone">
-                            With AI Blocks
-                        </span>
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-display leading-normal mb-6 text-shadow dark:text-shadow-light">
+                        {showTitle ? (
+                            <>
+                                <Typewriter text="Build Better Images" delay={80} />
+                                <br />
+                                <span className="text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 px-2 box-decoration-clone">
+                                    <Typewriter text="With AI Blocks" delay={80} />
+                                </span>
+                            </>
+                        ) : (
+                            <span className="opacity-0">Loading...</span>
+                        )}
                     </h1>
                     <p className="text-2xl text-gray-700 dark:text-gray-300 max-w-2xl mx-auto font-body bg-white/80 dark:bg-black/40 p-4 border-2 border-dashed border-gray-500 transition-theme animate-slideInUp">
                         Enhance, resize, and transform your assets directly in your browser. No uploads, full privacy, and blazing fast performance.
