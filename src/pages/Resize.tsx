@@ -1,383 +1,424 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ToolLayout from '../components/layout/ToolLayout';
-import ProgressSteps from '../components/shared/ProgressSteps';
-import Tooltip from '../components/shared/Tooltip';
-import EmptyState from '../components/shared/EmptyState';
 import { useFileSystem } from '../hooks/useFileSystem';
 import { useDPIInjector } from '../hooks/useDPIInjector';
 import { imageToCanvas, resizeCanvas, canvasToBlob, getExtensionFromMimeType } from '../utils/canvasHelpers';
 
-interface ProcessedImage {
+interface UploadedImage {
     id: string;
     file: File;
     preview: string;
-    processed: boolean;
-    canvas?: HTMLCanvasElement;
     originalWidth: number;
     originalHeight: number;
+    canvas: HTMLCanvasElement;
 }
-
-interface Preset {
-    name: string;
-    width: number;
-    height: number;
-    description: string;
-    icon: string;
-}
-
-const PRESETS: Preset[] = [
-    { name: 'Custom', width: 0, height: 0, description: 'Enter custom dimensions', icon: '✏️' },
-    { name: 'Merch by Amazon', width: 4500, height: 5400, description: 'Standard T-Shirt', icon: '👕' },
-    { name: 'Etsy Listing', width: 2000, height: 2000, description: 'Square format', icon: '📦' },
-    { name: 'Mug 11oz', width: 2000, height: 800, description: 'Wrap-around design', icon: '☕' },
-    { name: 'Instagram Post', width: 1080, height: 1080, description: 'Square social media', icon: '📱' },
-    { name: 'Facebook Cover', width: 1200, height: 630, description: 'Cover photo', icon: '🖼️' },
-    { name: '4K Wallpaper', width: 3840, height: 2160, description: 'Ultra HD', icon: '🖥️' },
-];
 
 const Resize: React.FC = () => {
     const navigate = useNavigate();
-    const [images, setImages] = useState<ProcessedImage[]>([]);
-    const [selectedPreset, setSelectedPreset] = useState('Custom');
-    const [width, setWidth] = useState(1000);
-    const [height, setHeight] = useState(1000);
-    const [lockAspectRatio, setLockAspectRatio] = useState(false);
-    const [aspectRatio, setAspectRatio] = useState(1);
+    const [images, setImages] = useState<UploadedImage[]>([]);
+    const [resizeMode, setResizeMode] = useState<'pixels' | 'percentage'>('pixels');
+    const [width, setWidth] = useState(1024);
+    const [height, setHeight] = useState(1024);
+    const [percentage, setPercentage] = useState(50);
+    const [customPercentage, setCustomPercentage] = useState('');
+    const [maintainAspectRatio, setMaintainAspectRatio] = useState(true);
+    const [doNotEnlarge, setDoNotEnlarge] = useState(false);
     const [format, setFormat] = useState<'png' | 'jpg' | 'webp'>('png');
     const [podMode, setPodMode] = useState(false);
-    const [currentStep, setCurrentStep] = useState(1);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const { saveToFolder } = useFileSystem();
     const { injectDPI } = useDPIInjector();
 
-    const steps = [
-        { number: 1, label: 'Upload', status: currentStep > 1 ? 'completed' as const : currentStep === 1 ? 'active' as const : 'pending' as const },
-        { number: 2, label: 'Configure', status: currentStep > 2 ? 'completed' as const : currentStep === 2 ? 'active' as const : 'pending' as const },
-        { number: 3, label: 'Process', status: currentStep > 3 ? 'completed' as const : currentStep === 3 ? 'active' as const : 'pending' as const },
-        { number: 4, label: 'Download', status: currentStep === 4 ? 'active' as const : 'pending' as const },
-    ];
+    const handleWidthChange = (newWidth: number) => {
+        setWidth(newWidth);
+        if (maintainAspectRatio && images.length > 0) {
+            const aspectRatio = images[0].originalWidth / images[0].originalHeight;
+            setHeight(Math.round(newWidth / aspectRatio));
+        }
+    };
 
-    const handleProcess = async (files: File[]) => {
-        const processedImages: ProcessedImage[] = [];
+    const handleHeightChange = (newHeight: number) => {
+        setHeight(newHeight);
+        if (maintainAspectRatio && images.length > 0) {
+            const aspectRatio = images[0].originalWidth / images[0].originalHeight;
+            setWidth(Math.round(newHeight * aspectRatio));
+        }
+    };
 
-        for (const file of files) {
+    const handleFileSelect = async (files: FileList | null) => {
+        if (!files || files.length === 0) return;
+
+        const newImages: UploadedImage[] = [];
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
             try {
                 const canvas = await imageToCanvas(file);
                 const preview = canvas.toDataURL();
 
-                processedImages.push({
-                    id: `${file.name}-${Date.now()}`,
+                newImages.push({
+                    id: `${file.name}-${Date.now()}-${i}`,
                     file,
                     preview,
-                    processed: false,
-                    canvas,
                     originalWidth: canvas.width,
                     originalHeight: canvas.height,
+                    canvas,
                 });
             } catch (error) {
-                console.error(`Error processing ${file.name}:`, error);
+                console.error(`Error loading ${file.name}:`, error);
             }
         }
 
-        setImages((prev) => [...prev, ...processedImages]);
-        setCurrentStep(2); // Move to Configure step
+        setImages((prev) => [...prev, ...newImages]);
     };
 
-    const handlePresetChange = useCallback((presetName: string) => {
-        setSelectedPreset(presetName);
-        const preset = PRESETS.find((p) => p.name === presetName);
-        if (preset && preset.name !== 'Custom') {
-            setWidth(preset.width);
-            setHeight(preset.height);
-            setAspectRatio(preset.width / preset.height);
-            setLockAspectRatio(true);
-        } else {
-            setLockAspectRatio(false);
+    const handleRemoveImage = (id: string) => {
+        setImages((prev) => prev.filter((img) => img.id !== id));
+    };
+
+    const calculateTargetDimensions = (img: UploadedImage) => {
+        let targetWidth = width;
+        let targetHeight = height;
+
+        if (resizeMode === 'percentage') {
+            const pct = percentage === 0 && customPercentage ? Number(customPercentage) : percentage;
+            targetWidth = Math.round(img.originalWidth * (pct / 100));
+            targetHeight = Math.round(img.originalHeight * (pct / 100));
+        } else if (maintainAspectRatio) {
+            const aspectRatio = img.originalWidth / img.originalHeight;
+            if (width / height > aspectRatio) {
+                targetWidth = Math.round(height * aspectRatio);
+            } else {
+                targetHeight = Math.round(width / aspectRatio);
+            }
         }
-    }, []);
 
-    const handleWidthChange = useCallback(
-        (newWidth: number) => {
-            setWidth(newWidth);
-            if (lockAspectRatio && aspectRatio > 0) {
-                setHeight(Math.round(newWidth / aspectRatio));
-            }
-        },
-        [lockAspectRatio, aspectRatio]
-    );
+        // Do not enlarge check (only for pixels mode)
+        if (resizeMode === 'pixels' && doNotEnlarge && (targetWidth > img.originalWidth || targetHeight > img.originalHeight)) {
+            targetWidth = img.originalWidth;
+            targetHeight = img.originalHeight;
+        }
 
-    const handleHeightChange = useCallback(
-        (newHeight: number) => {
-            setHeight(newHeight);
-            if (lockAspectRatio && aspectRatio > 0) {
-                setWidth(Math.round(newHeight * aspectRatio));
-            }
-        },
-        [lockAspectRatio, aspectRatio]
-    );
-
-    const handleApplyResize = async () => {
-        setCurrentStep(3); // Processing
-
-        const updatedImages = await Promise.all(
-            images.map(async (img) => {
-                if (!img.canvas) return img;
-                const resizedCanvas = resizeCanvas(img.canvas, width, height);
-                return { ...img, canvas: resizedCanvas, processed: true };
-            })
-        );
-
-        setImages(updatedImages);
-        setCurrentStep(4); // Download ready
+        return { targetWidth, targetHeight };
     };
 
-    const handleSaveAll = async () => {
+    const handleResize = async () => {
         if (images.length === 0) return;
 
-        try {
-            const filesToSave: { blob: Blob; filename: string }[] = [];
+        const filesToSave: { blob: Blob; filename: string }[] = [];
 
-            for (const img of images) {
-                if (!img.canvas) continue;
+        for (const img of images) {
+            const { targetWidth, targetHeight } = calculateTargetDimensions(img);
 
-                const mimeType = `image/${format}`;
-                let blob = await canvasToBlob(img.canvas, mimeType, format === 'jpg' ? 0.9 : 1.0);
+            const resizedCanvas = resizeCanvas(img.canvas, targetWidth, targetHeight);
+            const mimeType = `image/${format}`;
+            let blob = await canvasToBlob(resizedCanvas, mimeType, format === 'jpg' ? 0.9 : 1.0);
 
-                if (podMode && (format === 'png' || format === 'jpg')) {
-                    blob = await injectDPI(blob, 300);
-                }
-
-                const extension = getExtensionFromMimeType(mimeType);
-                const baseFilename = img.file.name.replace(/\.[^/.]+$/, '');
-                const filename = `${baseFilename}_resized_${width}x${height}.${extension}`;
-
-                filesToSave.push({ blob, filename });
+            if (podMode && (format === 'png' || format === 'jpg')) {
+                blob = await injectDPI(blob, 300);
             }
 
-            await saveToFolder(filesToSave);
-            setImages([]);
-            setCurrentStep(1); // Reset to start
-        } catch (error) {
-            console.error('Error saving files:', error);
+            const extension = getExtensionFromMimeType(mimeType);
+            const baseFilename = img.file.name.replace(/\.[^/.]+$/, '');
+            const filename = `${baseFilename}_resized.${extension}`;
+
+            filesToSave.push({ blob, filename });
         }
+
+        await saveToFolder(filesToSave);
     };
 
+    const handleDrop = useCallback((e: React.DragEvent) => {
+        e.preventDefault();
+        handleFileSelect(e.dataTransfer.files);
+    }, []);
+
+    const handleDragOver = useCallback((e: React.DragEvent) => {
+        e.preventDefault();
+    }, []);
+
     return (
-        <div className="h-full flex flex-col">
-            <div className="flex-shrink-0 p-4 border-b-4 border-white flex items-center justify-between">
-                <button className="nes-btn is-primary btn-pixel text-sm" onClick={() => navigate('/')}>
-                    ← Back
-                </button>
-                <h2 className="text-xl">🎨 Resize & Preset</h2>
-                <Tooltip text="Resize images with POD presets or custom dimensions">
-                    <span className="text-2xl cursor-help">❓</span>
-                </Tooltip>
-            </div>
+        <div className="min-h-screen bg-retro-bg dark:bg-retro-bg-dark transition-colors">
+            {/* Background Pattern */}
+            <div className="fixed inset-0 -z-10 bg-[linear-gradient(45deg,#c4c4c4_25%,transparent_25%,transparent_75%,#c4c4c4_75%,#c4c4c4),linear-gradient(45deg,#c4c4c4_25%,transparent_25%,transparent_75%,#c4c4c4_75%,#c4c4c4)] bg-[length:20px_20px] bg-[position:0_0,10px_10px] dark:bg-[linear-gradient(45deg,#222_25%,transparent_25%,transparent_75%,#222_75%,#222),linear-gradient(45deg,#222_25%,transparent_25%,transparent_75%,#222_75%,#222)]" />
 
-            <div className="flex-1 overflow-auto p-8">
-                <div className="max-w-6xl mx-auto">
-                    {/* Progress Steps */}
-                    <ProgressSteps steps={steps} />
-
-                    {/* Step 1: Upload */}
-                    {currentStep === 1 && (
-                        <ToolLayout
-                            title=""
-                            description=""
-                            onProcess={handleProcess}
-                            processedImages={[]}
-                            onSaveAll={() => { }}
-                        >
-                            <EmptyState
-                                icon="📁"
-                                title="Upload Your Images"
-                                description="Drag and drop images here, or click to browse. Supports PNG, JPG, WEBP."
-                                actionLabel="Choose Files"
-                                onAction={() => document.getElementById('file-input')?.click()}
-                            />
-                        </ToolLayout>
-                    )}
-
-                    {/* Step 2: Configure */}
-                    {currentStep === 2 && images.length > 0 && (
-                        <>
-                            {/* Preset Grid */}
-                            <div className="nes-container is-dark shadow-hard mb-6">
-                                <h3 className="text-lg mb-4 text-nes-blue">📐 Choose Preset or Custom Size</h3>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    {PRESETS.map((preset) => (
-                                        <div
-                                            key={preset.name}
-                                            className={`
-                        border-4 p-4 cursor-pointer transition-all text-center
-                        ${selectedPreset === preset.name ? 'border-nes-blue bg-nes-blue bg-opacity-20' : 'border-white hover:border-nes-gray'}
-                      `}
-                                            onClick={() => handlePresetChange(preset.name)}
-                                        >
-                                            <div className="text-4xl mb-2">{preset.icon}</div>
-                                            <div className="text-sm font-bold mb-1">{preset.name}</div>
-                                            {preset.width > 0 && (
-                                                <div className="text-xs text-nes-gray">{preset.width} x {preset.height}</div>
-                                            )}
-                                            <div className="text-xs text-nes-gray mt-1">{preset.description}</div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Dimensions */}
-                            <div className="nes-container is-dark shadow-hard mb-6">
-                                <h3 className="text-lg mb-4 text-nes-blue">📏 Dimensions</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                                    <div>
-                                        <label className="text-sm text-nes-gray mb-2 block flex items-center gap-2">
-                                            Width (px)
-                                            <Tooltip text="Target width in pixels">
-                                                <span className="text-xs">❓</span>
-                                            </Tooltip>
-                                        </label>
-                                        <input
-                                            type="number"
-                                            className="nes-input is-dark w-full"
-                                            value={width}
-                                            onChange={(e) => handleWidthChange(Number(e.target.value))}
-                                            min="1"
-                                            max="10000"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="text-sm text-nes-gray mb-2 block flex items-center gap-2">
-                                            Height (px)
-                                            <Tooltip text="Target height in pixels">
-                                                <span className="text-xs">❓</span>
-                                            </Tooltip>
-                                        </label>
-                                        <input
-                                            type="number"
-                                            className="nes-input is-dark w-full"
-                                            value={height}
-                                            onChange={(e) => handleHeightChange(Number(e.target.value))}
-                                            min="1"
-                                            max="10000"
-                                        />
-                                    </div>
-
-                                    <div className="flex items-end">
-                                        <label className="flex items-center gap-2 cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                className="nes-checkbox is-dark"
-                                                checked={lockAspectRatio}
-                                                onChange={(e) => {
-                                                    setLockAspectRatio(e.target.checked);
-                                                    if (e.target.checked && width > 0 && height > 0) {
-                                                        setAspectRatio(width / height);
-                                                    }
-                                                }}
-                                            />
-                                            <span className="text-sm">Lock Ratio {lockAspectRatio && '🔒'}</span>
-                                        </label>
-                                    </div>
-                                </div>
-
-                                {/* Preview */}
-                                <div className="p-4 border-2 border-nes-blue">
-                                    <p className="text-sm text-nes-blue mb-2">
-                                        📐 <strong>Output:</strong> {width} x {height} px
-                                    </p>
-                                    <p className="text-xs text-nes-gray">
-                                        Original: {images[0].originalWidth} x {images[0].originalHeight} px
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Output Settings */}
-                            <div className="nes-container is-dark shadow-hard mb-6">
-                                <h3 className="text-lg mb-4 text-nes-blue">⚙️ Output Settings</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="text-sm text-nes-gray mb-2 block">Format</label>
-                                        <div className="nes-select is-dark">
-                                            <select value={format} onChange={(e) => setFormat(e.target.value as 'png' | 'jpg' | 'webp')}>
-                                                <option value="png">PNG (Best quality)</option>
-                                                <option value="jpg">JPG (Smaller size)</option>
-                                                <option value="webp">WEBP (Modern)</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="text-sm text-nes-gray mb-2 block flex items-center gap-2">
-                                            POD Mode
-                                            <Tooltip text="Enable 300 DPI for print-on-demand quality">
-                                                <span className="text-xs">❓</span>
-                                            </Tooltip>
-                                        </label>
-                                        <label className="flex items-center gap-2">
-                                            <input
-                                                type="checkbox"
-                                                className="nes-checkbox is-dark"
-                                                checked={podMode}
-                                                onChange={(e) => setPodMode(e.target.checked)}
-                                            />
-                                            <span className="text-sm">{podMode ? '300 DPI ✓' : '72 DPI'}</span>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button
-                                className="nes-btn is-success btn-pixel w-full text-lg"
-                                onClick={handleApplyResize}
-                            >
-                                Apply Resize to {images.length} Image{images.length !== 1 && 's'} →
-                            </button>
-                        </>
-                    )}
-
-                    {/* Step 3: Processing */}
-                    {currentStep === 3 && (
-                        <div className="nes-container is-warning shadow-hard text-center py-12">
-                            <div className="text-6xl mb-4">⚙️</div>
-                            <h3 className="text-xl mb-2">Processing...</h3>
-                            <p className="text-sm text-nes-gray">Resizing your images</p>
-                        </div>
-                    )}
-
-                    {/* Step 4: Download */}
-                    {currentStep === 4 && images.length > 0 && (
-                        <>
-                            <div className="nes-container is-success shadow-hard mb-6 text-center">
-                                <div className="text-6xl mb-4">✅</div>
-                                <h3 className="text-xl mb-2">Ready to Download!</h3>
-                                <p className="text-sm text-nes-gray mb-4">
-                                    {images.length} image{images.length !== 1 && 's'} resized to {width} x {height}
-                                </p>
-                                <button
-                                    className="nes-btn is-success btn-pixel text-lg"
-                                    onClick={handleSaveAll}
-                                >
-                                    💚 Download All ({images.length})
-                                </button>
-                            </div>
-
-                            {/* Preview Grid */}
-                            <div className="nes-container is-dark shadow-hard">
-                                <h3 className="text-lg mb-4 text-nes-blue">Preview</h3>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    {images.slice(0, 8).map((img) => (
-                                        <div key={img.id} className="border-2 border-white p-2">
-                                            <img src={img.preview} alt="Preview" className="w-full h-32 object-cover mb-2" />
-                                            <p className="text-xs text-nes-gray truncate">{img.file.name}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </>
-                    )}
+            {/* Header */}
+            <div className="bg-white dark:bg-gray-800 border-b-4 border-black dark:border-gray-500 p-4">
+                <div className="max-w-7xl mx-auto flex items-center justify-between">
+                    <button
+                        className="px-4 py-2 border-4 border-black dark:border-white bg-gray-200 dark:bg-gray-700 hover:translate-y-1 active:translate-y-2 transition-all shadow-retro active:shadow-retro-active font-display text-xs"
+                        onClick={() => navigate('/')}
+                    >
+                        ← Back
+                    </button>
+                    <h1 className="text-xl md:text-2xl font-display">Resize IMAGE</h1>
+                    <div className="w-20"></div>
                 </div>
             </div>
+
+            <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => handleFileSelect(e.target.files)}
+            />
+
+            {/* Main Content */}
+            {images.length === 0 ? (
+                // Upload Screen
+                <div className="max-w-4xl mx-auto px-4 py-20">
+                    <div className="text-center mb-8">
+                        <h2 className="text-3xl font-display mb-4">Resize IMAGE</h2>
+                        <p className="text-xl font-body text-gray-700 dark:text-gray-300">
+                            Resize <span className="text-blue-600">JPG</span>, <span className="text-green-600">PNG</span>, <span className="text-purple-600">SVG</span> or <span className="text-red-600">GIF</span> by defining new height and width pixels.<br />
+                            Change image dimensions in bulk.
+                        </p>
+                    </div>
+
+                    <div
+                        className="bg-white dark:bg-gray-800 border-4 border-black dark:border-gray-400 p-16 text-center shadow-retro dark:shadow-retro-dark cursor-pointer hover:translate-y-1 transition-all"
+                        onDrop={handleDrop}
+                        onDragOver={handleDragOver}
+                        onClick={() => fileInputRef.current?.click()}
+                    >
+                        <div className="flex flex-col items-center gap-6">
+                            <div className="flex items-center gap-4">
+                                <div className="w-16 h-16 bg-blue-500 border-4 border-black flex items-center justify-center text-white">
+                                    <span className="material-symbols-outlined text-4xl">upload</span>
+                                </div>
+                                <div className="w-16 h-16 bg-blue-500 border-4 border-black flex items-center justify-center text-white">
+                                    <span className="material-symbols-outlined text-4xl">photo_library</span>
+                                </div>
+                            </div>
+                            <button className="px-12 py-4 bg-blue-500 border-4 border-black text-white font-display text-lg hover:bg-blue-600 transition-colors shadow-retro">
+                                Select images
+                            </button>
+                            <p className="text-gray-500 dark:text-gray-400 font-body text-lg">or drop images here</p>
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                // Resize Screen
+                <div className="max-w-7xl mx-auto px-4 py-8 flex gap-6 flex-col lg:flex-row">
+                    {/* Left: Image Preview */}
+                    <div className="flex-1">
+                        <div className="mb-4">
+                            <button
+                                className="px-6 py-3 bg-gray-800 dark:bg-gray-700 text-white border-4 border-black dark:border-white font-display text-xs hover:translate-y-1 transition-all shadow-retro flex items-center gap-2"
+                                onClick={() => fileInputRef.current?.click()}
+                            >
+                                <span className="text-2xl">+</span>
+                                Add more images
+                                <span className="px-2 py-1 bg-blue-500 border-2 border-white text-xs">{images.length}</span>
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            {images.map((img) => {
+                                const { targetWidth, targetHeight } = calculateTargetDimensions(img);
+                                return (
+                                    <div
+                                        key={img.id}
+                                        className="relative bg-white dark:bg-gray-800 border-4 border-black dark:border-gray-400 p-2 shadow-retro group"
+                                    >
+                                        <button
+                                            className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 border-4 border-black text-white flex items-center justify-center hover:bg-red-600 z-10"
+                                            onClick={() => handleRemoveImage(img.id)}
+                                        >
+                                            ×
+                                        </button>
+                                        <img src={img.preview} alt={img.file.name} className="w-full h-32 object-cover" />
+                                        <div className="mt-2 text-xs font-body">
+                                            <p className="truncate font-bold">{img.file.name}</p>
+                                            <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400 mt-1">
+                                                <span className="px-1 bg-gray-200 dark:bg-gray-700 border border-gray-400">
+                                                    {img.originalWidth} x {img.originalHeight}
+                                                </span>
+                                                <span>→</span>
+                                                <span className="px-1 bg-blue-100 dark:bg-blue-900 border border-blue-500 text-blue-700 dark:text-blue-300 font-bold">
+                                                    {targetWidth} x {targetHeight}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Right: Resize Options */}
+                    <div className="lg:w-96">
+                        <div className="bg-white dark:bg-gray-800 border-4 border-black dark:border-gray-400 p-6 shadow-retro dark:shadow-retro-dark sticky top-4 min-h-[803px] flex flex-col">
+                            <h3 className="text-xl font-display mb-6">Resize options</h3>
+
+                            {/* Top section - will grow to push bottom content down */}
+                            <div className="flex-grow">
+                                {/* Mode Toggle */}
+                                <div className="grid grid-cols-2 gap-3 mb-6">
+                                    <button
+                                        className={`p-4 border-4 transition-all ${resizeMode === 'pixels'
+                                            ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                                            : 'border-gray-300 dark:border-gray-600'
+                                            }`}
+                                        onClick={() => setResizeMode('pixels')}
+                                    >
+                                        <span className="material-symbols-outlined text-3xl mb-2">grid_on</span>
+                                        <p className="text-xs font-body">By pixels</p>
+                                        {resizeMode === 'pixels' && <span className="text-green-500 text-xl">✓</span>}
+                                    </button>
+                                    <button
+                                        className={`p-4 border-4 transition-all ${resizeMode === 'percentage'
+                                            ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                                            : 'border-gray-300 dark:border-gray-600'
+                                            }`}
+                                        onClick={() => setResizeMode('percentage')}
+                                    >
+                                        <span className="material-symbols-outlined text-3xl mb-2">percent</span>
+                                        <p className="text-xs font-body">By percentage</p>
+                                        {resizeMode === 'percentage' && <span className="text-green-500 text-xl">✓</span>}
+                                    </button>
+                                </div>
+
+                                {resizeMode === 'pixels' ? (
+                                    <>
+                                        <p className="text-sm font-body mb-4">Resize all images to a <strong>exact size</strong> of</p>
+
+                                        <div className="space-y-4 mb-6">
+                                            <div>
+                                                <label className="block text-sm font-body mb-2">Width (px):</label>
+                                                <input
+                                                    type="number"
+                                                    value={width}
+                                                    onChange={(e) => handleWidthChange(Number(e.target.value))}
+                                                    className="w-full p-3 border-4 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 font-body text-lg"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-body mb-2">Height (px):</label>
+                                                <input
+                                                    type="number"
+                                                    value={height}
+                                                    onChange={(e) => handleHeightChange(Number(e.target.value))}
+                                                    className="w-full p-3 border-4 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 font-body text-lg"
+                                                />
+                                            </div>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <p className="text-sm font-body mb-4">Reduce images to <strong>percentage</strong> of original size:</p>
+                                        <div className="space-y-2 mb-6">
+                                            {[25, 50, 75].map((pct) => (
+                                                <button
+                                                    key={pct}
+                                                    className={`w-full p-3 border-4 text-left font-body transition-all ${percentage === pct
+                                                        ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                                                        : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                                                        }`}
+                                                    onClick={() => { setPercentage(pct); setCustomPercentage(''); }}
+                                                >
+                                                    {pct}% SMALLER {percentage === pct && <span className="float-right text-green-500">✓</span>}
+                                                </button>
+                                            ))}
+                                            <button
+                                                className={`w-full p-3 border-4 text-left font-body transition-all ${percentage === 0
+                                                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                                                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                                                    }`}
+                                                onClick={() => setPercentage(0)}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <span>Custom:</span>
+                                                    {percentage === 0 ? (
+                                                        <input
+                                                            type="number"
+                                                            value={customPercentage}
+                                                            onChange={(e) => setCustomPercentage(e.target.value)}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            placeholder="Enter %"
+                                                            min="1"
+                                                            max="99"
+                                                            className="flex-1 p-1 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 font-body text-sm"
+                                                        />
+                                                    ) : (
+                                                        <span className="text-gray-500">Enter custom %</span>
+                                                    )}
+                                                    {percentage === 0 && <span className="text-green-500">✓</span>}
+                                                </div>
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+
+                                {/* Checkboxes - Only show in pixels mode */}
+                                {resizeMode === 'pixels' && (
+                                    <div className="space-y-3 mb-6 border-t-2 border-gray-300 pt-4">
+                                        <label className="flex items-center gap-3 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={maintainAspectRatio}
+                                                onChange={(e) => setMaintainAspectRatio(e.target.checked)}
+                                                className="w-5 h-5"
+                                            />
+                                            <span className="text-sm font-body">Maintain aspect ratio</span>
+                                        </label>
+                                        <label className="flex items-center gap-3 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={doNotEnlarge}
+                                                onChange={(e) => setDoNotEnlarge(e.target.checked)}
+                                                className="w-5 h-5"
+                                            />
+                                            <span className="text-sm font-body">Do not enlarge if smaller</span>
+                                        </label>
+                                    </div>
+                                )}
+                            </div>
+                            {/* End of flex-grow section */}
+
+                            {/* Bottom section - anchored at bottom */}
+                            <div>
+                                {/* Output Settings */}
+                                <div className="space-y-3 mb-6 border-t-2 border-gray-300 pt-4">
+                                    <div>
+                                        <label className="block text-sm font-body mb-2">Format:</label>
+                                        <select
+                                            value={format}
+                                            onChange={(e) => setFormat(e.target.value as 'png' | 'jpg' | 'webp')}
+                                            className="w-full p-2 border-4 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 font-body"
+                                        >
+                                            <option value="png">PNG</option>
+                                            <option value="jpg">JPG</option>
+                                            <option value="webp">WEBP</option>
+                                        </select>
+                                    </div>
+                                    <label className="flex items-center gap-3 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={podMode}
+                                            onChange={(e) => setPodMode(e.target.checked)}
+                                            className="w-5 h-5"
+                                        />
+                                        <span className="text-sm font-body">POD Mode (300 DPI)</span>
+                                    </label>
+                                </div>
+
+                                {/* Resize Button */}
+                                <button
+                                    className="w-full px-6 py-4 bg-blue-500 border-4 border-black text-white font-display text-sm hover:bg-blue-600 transition-all shadow-retro active:shadow-retro-active active:translate-y-1 flex items-center justify-center gap-2"
+                                    onClick={handleResize}
+                                >
+                                    Resize IMAGES
+                                    <span className="material-symbols-outlined">arrow_circle_right</span>
+                                </button>
+                            </div>
+                            {/* End of bottom section */}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
