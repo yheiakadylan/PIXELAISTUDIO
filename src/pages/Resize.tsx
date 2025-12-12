@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDPIInjector } from '../hooks/useDPIInjector';
 import { imageToCanvas, resizeCanvas, canvasToBlob, getExtensionFromMimeType } from '../utils/canvasHelpers';
@@ -26,6 +26,15 @@ const Resize: React.FC = () => {
     const [podMode, setPodMode] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { injectDPI } = useDPIInjector();
+
+    // Cleanup Object URLs on unmount
+    useEffect(() => {
+        return () => {
+            images.forEach(img => {
+                if (img.preview) URL.revokeObjectURL(img.preview);
+            });
+        };
+    }, [images]);
 
     const handleWidthChange = (newWidth: number) => {
         setWidth(newWidth);

@@ -72,7 +72,7 @@ const Home: React.FC = () => {
             badge: 'NEW',
             badgeBg: 'bg-red-500',
             badgeRotate: '-rotate-1',
-            path: '/upscaler',
+            path: '/upscale',
         },
     ];
 

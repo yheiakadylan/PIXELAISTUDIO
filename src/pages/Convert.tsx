@@ -1,24 +1,34 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDPIInjector } from '../hooks/useDPIInjector';
-import { imageToCanvas, canvasToBlob, getExtensionFromMimeType } from '../utils/canvasHelpers';
+import { imageToCanvas, getExtensionFromMimeType } from '../utils/canvasHelpers';
+import { canvasToBlobEnhanced, getMimeTypeFromFormat } from '../utils/formatConverters';
 
 interface UploadedImage {
     id: string;
     file: File;
     preview: string;
     canvas: HTMLCanvasElement;
-    targetFormat?: 'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'gif' | 'ico';
+    targetFormat?: 'png' | 'jpg' | 'webp' | 'avif';
 }
 
 const Convert: React.FC = () => {
     const navigate = useNavigate();
     const [images, setImages] = useState<UploadedImage[]>([]);
     const [conversionMode, setConversionMode] = useState<'batch' | 'individual'>('batch');
-    const [batchFormat, setBatchFormat] = useState<'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'gif' | 'ico'>('png');
+    const [batchFormat, setBatchFormat] = useState<'png' | 'jpg' | 'webp' | 'avif'>('png');
     const [podMode, setPodMode] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { injectDPI } = useDPIInjector();
+
+    // Cleanup Object URLs on unmount
+    useEffect(() => {
+        return () => {
+            images.forEach(img => {
+                if (img.preview) URL.revokeObjectURL(img.preview);
+            });
+        };
+    }, [images]);
 
     const handleFileSelect = async (files: FileList | null) => {
         if (!files || files.length === 0) return;
@@ -50,7 +60,7 @@ const Convert: React.FC = () => {
         setImages((prev) => prev.filter((img) => img.id !== id));
     };
 
-    const handleImageFormatChange = (id: string, format: 'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'gif' | 'ico') => {
+    const handleImageFormatChange = (id: string, format: 'png' | 'jpg' | 'webp' | 'avif') => {
         setImages(prev => prev.map(img =>
             img.id === id ? { ...img, targetFormat: format } : img
         ));
@@ -61,8 +71,8 @@ const Convert: React.FC = () => {
 
         for (const img of images) {
             const format = conversionMode === 'batch' ? batchFormat : (img.targetFormat || 'png');
-            const mimeType = `image/${format}`;
-            let blob = await canvasToBlob(img.canvas, mimeType, format === 'jpg' ? 0.9 : 1.0);
+            const mimeType = getMimeTypeFromFormat(format);
+            let blob = await canvasToBlobEnhanced(img.canvas, mimeType, format === 'jpg' ? 0.9 : 1.0);
 
             if (podMode && (format === 'png' || format === 'jpg')) {
                 blob = await injectDPI(blob, 300);
@@ -289,33 +299,6 @@ const Convert: React.FC = () => {
                                             onClick={() => setBatchFormat('avif')}
                                         >
                                             AVIF (Next-gen) {batchFormat === 'avif' && <span className="float-right text-green-500">✓</span>}
-                                        </button>
-                                        <button
-                                            className={`w-full p-3 border-4 text-left font-body text-base transition-all ${batchFormat === 'bmp'
-                                                ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                                                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
-                                                }`}
-                                            onClick={() => setBatchFormat('bmp')}
-                                        >
-                                            BMP (Uncompressed) {batchFormat === 'bmp' && <span className="float-right text-green-500">✓</span>}
-                                        </button>
-                                        <button
-                                            className={`w-full p-3 border-4 text-left font-body text-base transition-all ${batchFormat === 'gif'
-                                                ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                                                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
-                                                }`}
-                                            onClick={() => setBatchFormat('gif')}
-                                        >
-                                            GIF (Animated) {batchFormat === 'gif' && <span className="float-right text-green-500">✓</span>}
-                                        </button>
-                                        <button
-                                            className={`w-full p-3 border-4 text-left font-body text-base transition-all ${batchFormat === 'ico'
-                                                ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                                                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
-                                                }`}
-                                            onClick={() => setBatchFormat('ico')}
-                                        >
-                                            ICO (Favicon) {batchFormat === 'ico' && <span className="float-right text-green-500">✓</span>}
                                         </button>
                                     </div>
                                 </div>

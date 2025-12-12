@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDPIInjector } from '../hooks/useDPIInjector';
 import { imageToCanvas, canvasToBlob, getExtensionFromMimeType } from '../utils/canvasHelpers';
@@ -26,23 +26,33 @@ const RemBg: React.FC = () => {
     const format = 'png';
     const podMode = true;
 
+    // Cleanup Object URLs on unmount
+    useEffect(() => {
+        return () => {
+            images.forEach(img => {
+                if (img.original) URL.revokeObjectURL(img.original);
+                if (img.processed) URL.revokeObjectURL(img.processed);
+            });
+        };
+    }, [images]);
+
     const handleFileSelect = async (files: FileList | null) => {
         if (!files || files.length === 0) return;
 
         const newImages: ProcessedImage[] = [];
 
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
+        for (const file of Array.from(files)) {
             try {
                 const canvas = await imageToCanvas(file);
-                const original = canvas.toDataURL();
+                const preview = canvas.toDataURL();
 
                 newImages.push({
-                    id: `${file.name}-${Date.now()}-${i}`,
+                    id: `${file.name}-${Date.now()}`,
                     file,
-                    original,
+                    original: preview,
+                    status: 'processing',
                     progress: 0,
-                    status: 'idle'
+                    canvas
                 });
             } catch (error) {
                 console.error(`Error loading ${file.name}:`, error);
@@ -51,10 +61,10 @@ const RemBg: React.FC = () => {
 
         setImages(prev => [...prev, ...newImages]);
 
-        // Start processing automatically
-        newImages.forEach((img, index) => {
-            processImage(img.id, files[index]);
-        });
+        // Sequential processing to avoid hanging browser
+        for (const img of newImages) {
+            await processImage(img.id, img.file);
+        }
     };
 
     const processImage = async (id: string, file: File) => {
