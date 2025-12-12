@@ -70,6 +70,52 @@
   .stagger-item:nth-child(6) {
     animation-delay: 300ms;
   }
+
+  /* Character animations */
+  @keyframes jump {
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-40px);
+    }
+  }
+
+  @keyframes walk-left {
+
+    0%,
+    100% {
+      transform: translateY(0) rotate(0deg);
+    }
+
+    50% {
+      transform: translateY(-2px) rotate(-10deg);
+    }
+  }
+
+  @keyframes walk-right {
+
+    0%,
+    100% {
+      transform: translateY(0) rotate(0deg);
+    }
+
+    50% {
+      transform: translateY(-2px) rotate(10deg);
+    }
+  }
+
+  .animate-walk-left {
+    animation: walk-left 0.4s ease-in-out infinite;
+  }
+
+  .animate-walk-right {
+    animation: walk-right 0.4s ease-in-out infinite;
+    animation-delay: 0.2s;
+  }
 }
 
 /* Global Styles */

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CraftModal from '../components/CraftModal';
+import PixelCharacter from '../components/PixelCharacter';
 
 const Home: React.FC = () => {
     const navigate = useNavigate();
@@ -213,6 +214,9 @@ const Home: React.FC = () => {
                 isOpen={showCraftModal}
                 onClose={() => setShowCraftModal(false)}
             />
+
+            {/* Animated Character */}
+            <PixelCharacter />
         </div>
     );
 };
