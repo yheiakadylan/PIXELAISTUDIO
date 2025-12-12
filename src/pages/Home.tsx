@@ -36,7 +36,7 @@ const Home: React.FC = () => {
             color: 'is-error',
             icon: '⚡',
             path: '/upscale',
-            comingSoon: true,
+            comingSoon: false,
         },
     ];
 
