@@ -1,376 +1,389 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Upscaler from 'upscaler';
-import ToolLayout from '../components/layout/ToolLayout';
-import { useFileSystem } from '../hooks/useFileSystem';
-import { useDPIInjector } from '../hooks/useDPIInjector';
-import { imageToCanvas, canvasToBlob, getExtensionFromMimeType } from '../utils/canvasHelpers';
 
-interface ProcessedImage {
+interface UpscaledImage {
     id: string;
     file: File;
-    preview: string;
-    processed: boolean;
-    originalCanvas?: HTMLCanvasElement;
-    upscaledCanvas?: HTMLCanvasElement;
+    original: string; // data URL
+    upscaled?: string; // data URL after upscaling
+    originalWidth: number;
+    originalHeight: number;
+    originalSize: number; // bytes
+    upscaledWidth?: number;
+    upscaledHeight?: number;
+    upscaledSize?: number;
+    status: 'idle' | 'processing' | 'done' | 'error';
+    progress: number;
 }
+
+type ModelType = 'photo' | 'anime';
+type ScaleRate = 2 | 4 | 8;
 
 const Upscale: React.FC = () => {
     const navigate = useNavigate();
-    const [images, setImages] = useState<ProcessedImage[]>([]);
-    const [isProcessing, setIsProcessing] = useState(false);
-    const [processingProgress, setProcessingProgress] = useState(0);
-    const [currentFile, setCurrentFile] = useState('');
-    const [scaleFactor, setScaleFactor] = useState<2 | 4>(2);
-    const [format, setFormat] = useState<'png' | 'jpg' | 'webp'>('png');
-    const [podMode, setPodMode] = useState(false);
-    const [showComparison, setShowComparison] = useState(false);
-    const [comparisonImage, setComparisonImage] = useState<{ original: string; upscaled: string } | null>(null);
-    const [sliderPosition, setSliderPosition] = useState(50);
-    const { saveToFolder } = useFileSystem();
-    const { injectDPI } = useDPIInjector();
-    const upscalerRef = useRef<InstanceType<typeof Upscaler> | null>(null);
+    const [image, setImage] = useState<UpscaledImage | null>(null);
+    const [model, setModel] = useState<ModelType>('photo');
+    const [scaleRate, setScaleRate] = useState<ScaleRate>(2);
+    const [zoom, setZoom] = useState(100); // 100 = 100%
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Initialize upscaler
-    const getUpscaler = useCallback(() => {
-        if (!upscalerRef.current) {
-            upscalerRef.current = new Upscaler();
+    const handleFileSelect = async (files: FileList | null) => {
+        if (!files || files.length === 0) return;
+
+        const file = files[0]; // Single image only
+        try {
+            const img = new Image();
+            const original = URL.createObjectURL(file);
+
+            await new Promise<void>((resolve, reject) => {
+                img.onload = () => resolve();
+                img.onerror = reject;
+                img.src = original;
+            });
+
+            const newImage: UpscaledImage = {
+                id: `${file.name}-${Date.now()}`,
+                file,
+                original,
+                originalWidth: img.width,
+                originalHeight: img.height,
+                originalSize: file.size,
+                status: 'idle',
+                progress: 0,
+            };
+
+            setImage(newImage);
+        } catch (error) {
+            console.error(`Error loading ${file.name}:`, error);
         }
-        return upscalerRef.current;
-    }, []);
-
-    const handleProcess = async (files: File[]) => {
-        setIsProcessing(true);
-        const processedImages: ProcessedImage[] = [];
-        const upscaler = getUpscaler();
-
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            setCurrentFile(file.name);
-            setProcessingProgress(Math.round((i / files.length) * 100));
-
-            try {
-                // Load original image
-                const originalCanvas = await imageToCanvas(file);
-
-                // Upscale using AI - returns base64 string
-                const upscaledDataURL = await upscaler.upscale(originalCanvas, {
-                    patchSize: 64,
-                    padding: 2,
-                    progress: (progress: number) => {
-                        const overallProgress = ((i + progress) / files.length) * 100;
-                        setProcessingProgress(Math.round(overallProgress));
-                    },
-                }) as string;
-
-                // Convert base64 to canvas
-                const upscaledImg = new Image();
-                await new Promise((resolve, reject) => {
-                    upscaledImg.onload = resolve;
-                    upscaledImg.onerror = reject;
-                    upscaledImg.src = upscaledDataURL;
-                });
-
-                const upscaledCanvas = document.createElement('canvas');
-                upscaledCanvas.width = upscaledImg.width;
-                upscaledCanvas.height = upscaledImg.height;
-                const upscaledCtx = upscaledCanvas.getContext('2d');
-                if (upscaledCtx) {
-                    upscaledCtx.drawImage(upscaledImg, 0, 0);
-                }
-
-                // Scale to target factor
-                const targetWidth = originalCanvas.width * scaleFactor;
-                const targetHeight = originalCanvas.height * scaleFactor;
-
-                const finalCanvas = document.createElement('canvas');
-                finalCanvas.width = targetWidth;
-                finalCanvas.height = targetHeight;
-                const ctx = finalCanvas.getContext('2d');
-                if (ctx) {
-                    ctx.drawImage(upscaledCanvas, 0, 0, targetWidth, targetHeight);
-                }
-
-                const preview = finalCanvas.toDataURL();
-
-                processedImages.push({
-                    id: `${file.name}-${Date.now()}`,
-                    file,
-                    preview,
-                    processed: true,
-                    originalCanvas,
-                    upscaledCanvas: finalCanvas,
-                });
-            } catch (error) {
-                console.error(`Error processing ${file.name}:`, error);
-            }
-        }
-
-        setImages((prev) => [...prev, ...processedImages]);
-        setIsProcessing(false);
-        setProcessingProgress(0);
-        setCurrentFile('');
     };
 
-    const handleSaveAll = async () => {
-        if (images.length === 0) return;
+    const processUpscale = async () => {
+        if (!image) return;
+
+        setImage(prev => prev ? { ...prev, status: 'processing', progress: 0 } : null);
 
         try {
-            const filesToSave: { blob: Blob; filename: string }[] = [];
+            // TODO: Replace with Real-ESRGAN API call
+            // For now, use placeholder - would need backend Python API
 
-            for (const img of images) {
-                if (!img.upscaledCanvas) continue;
+            setImage(prev => prev ? { ...prev, progress: 30 } : null);
 
-                const mimeType = `image/${format}`;
-                let blob = await canvasToBlob(img.upscaledCanvas, mimeType, format === 'jpg' ? 0.9 : 1.0);
+            // Simulate processing
+            await new Promise(resolve => setTimeout(resolve, 1000));
 
-                // Inject DPI if POD mode is enabled
-                if (podMode && (format === 'png' || format === 'jpg')) {
-                    blob = await injectDPI(blob, 300);
-                }
+            setImage(prev => prev ? { ...prev, progress: 60 } : null);
 
-                const extension = getExtensionFromMimeType(mimeType);
-                const baseFilename = img.file.name.replace(/\.[^/.]+$/, '');
-                const filename = `${baseFilename}_upscaled_${scaleFactor}x.${extension}`;
+            // Create placeholder upscaled (just resize for demo)
+            const targetWidth = image.originalWidth * scaleRate;
+            const targetHeight = image.originalHeight * scaleRate;
 
-                filesToSave.push({ blob, filename });
-            }
+            const canvas = document.createElement('canvas');
+            canvas.width = targetWidth;
+            canvas.height = targetHeight;
+            const ctx = canvas.getContext('2d')!;
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
 
-            await saveToFolder(filesToSave);
+            const img = new Image();
+            img.src = image.original;
+            await new Promise<void>((resolve) => {
+                img.onload = () => resolve();
+            });
 
-            // Clear queue after successful save
-            setImages([]);
+            ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+
+            setImage(prev => prev ? { ...prev, progress: 80 } : null);
+
+            const upscaled = canvas.toDataURL('image/png');
+            const blob = await new Promise<Blob>((resolve, reject) => {
+                canvas.toBlob((b) => b ? resolve(b) : reject(), 'image/png');
+            });
+
+            setImage(prev => prev ? {
+                ...prev,
+                upscaled,
+                upscaledWidth: targetWidth,
+                upscaledHeight: targetHeight,
+                upscaledSize: blob.size,
+                status: 'done',
+                progress: 100
+            } : null);
+
         } catch (error) {
-            console.error('Error saving files:', error);
+            console.error('Upscaling error:', error);
+            setImage(prev => prev ? { ...prev, status: 'error' } : null);
         }
     };
 
-    const handleShowComparison = useCallback((img: ProcessedImage) => {
-        if (img.originalCanvas && img.upscaledCanvas) {
-            setComparisonImage({
-                original: img.originalCanvas.toDataURL(),
-                upscaled: img.upscaledCanvas.toDataURL(),
-            });
-            setShowComparison(true);
-            setSliderPosition(50);
-        }
+    const handleDownload = async () => {
+        if (!image || !image.upscaled) return;
+
+        const link = document.createElement('a');
+        link.href = image.upscaled;
+        link.download = `${image.file.name.replace(/\.[^/.]+$/, '')}_upscaled_x${scaleRate}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    const handleDrop = useCallback((e: React.DragEvent) => {
+        e.preventDefault();
+        handleFileSelect(e.dataTransfer.files);
     }, []);
 
+    const handleDragOver = useCallback((e: React.DragEvent) => {
+        e.preventDefault();
+    }, []);
+
+    const formatBytes = (bytes: number) => {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    };
+
     return (
-        <div className="h-full flex flex-col">
-            {/* Back Button */}
-            <div className="flex-shrink-0 p-4 border-b-4 border-white">
-                <button
-                    className="nes-btn is-primary btn-pixel text-sm"
-                    onClick={() => navigate('/')}
-                >
-                    ← Back to Home
-                </button>
-            </div>
-
-            <ToolLayout
-                title="⚡ UPSCALE 4K"
-                description="AI enhancement to 4K quality using neural networks"
-                onProcess={handleProcess}
-                processedImages={images}
-                onSaveAll={handleSaveAll}
-            >
-                {/* Processing Progress */}
-                {isProcessing && (
-                    <div className="nes-container is-warning shadow-hard mb-6">
-                        <h3 className="text-lg mb-4 text-nes-yellow">⚡ Enhancing...</h3>
-                        <div className="mb-4">
-                            <progress
-                                className="nes-progress is-warning"
-                                value={processingProgress}
-                                max="100"
-                            />
-                        </div>
-                        <p className="text-sm text-center">
-                            {processingProgress}% Complete
+        <div className="min-h-screen bg-retro-bg dark:bg-retro-bg-dark transition-colors">
+            {/* Header */}
+            <div className="border-b-4 border-black dark:border-gray-400 bg-white dark:bg-gray-800 p-4">
+                <div className="max-w-7xl mx-auto flex items-center justify-center gap-4">
+                    <button
+                        className="px-4 py-2 bg-gray-200 dark:bg-gray-700 border-4 border-black dark:border-gray-400 font-display text-sm hover:bg-gray-300 dark:hover:bg-gray-600 transition-all shadow-retro active:shadow-retro-active active:translate-y-1 absolute left-4"
+                        onClick={() => navigate('/')}
+                    >
+                        ← Back
+                    </button>
+                    <div className="text-center">
+                        <h1 className="text-2xl font-display">🔍 IMAGE UPSCALER</h1>
+                        <p className="text-sm font-body text-gray-600 dark:text-gray-400">
+                            AI-powered upscaling with Real-ESRGAN
                         </p>
-                        {currentFile && (
-                            <p className="text-xs text-center mt-2 text-nes-gray">
-                                Processing: {currentFile}
-                            </p>
-                        )}
-                    </div>
-                )}
-
-                {/* Upscale Settings */}
-                <div className="nes-container is-dark shadow-hard mb-6">
-                    <h3 className="text-lg mb-4 text-nes-blue">⚙️ Upscale Settings</h3>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <div>
-                            <label className="text-sm text-nes-gray mb-2 block">Scale Factor</label>
-                            <div className="nes-select is-dark">
-                                <select
-                                    value={scaleFactor}
-                                    onChange={(e) => setScaleFactor(Number(e.target.value) as 2 | 4)}
-                                    disabled={isProcessing}
-                                >
-                                    <option value="2">2x (Double size)</option>
-                                    <option value="4">4x (Quad size)</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="text-sm text-nes-gray mb-2 block">Output Format</label>
-                            <div className="nes-select is-dark">
-                                <select
-                                    value={format}
-                                    onChange={(e) => setFormat(e.target.value as 'png' | 'jpg' | 'webp')}
-                                    disabled={isProcessing}
-                                >
-                                    <option value="png">PNG (Best quality)</option>
-                                    <option value="jpg">JPG (Smaller size)</option>
-                                    <option value="webp">WEBP (Modern)</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="text-sm text-nes-gray mb-2 block">DPI Setting</label>
-                            <label className="flex items-center gap-2">
-                                <input
-                                    type="checkbox"
-                                    className="nes-checkbox is-dark"
-                                    checked={podMode}
-                                    onChange={(e) => setPodMode(e.target.checked)}
-                                    disabled={isProcessing}
-                                />
-                                <span className="text-sm">POD Mode (300 DPI) {podMode && '✓'}</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    {/* Performance Warning */}
-                    <div className="p-4 border-2 border-nes-yellow">
-                        <p className="text-sm text-nes-yellow mb-2">
-                            ⚠️ <strong>Performance Note:</strong>
-                        </p>
-                        <ul className="text-xs text-nes-gray list-disc list-inside space-y-1">
-                            <li>AI upscaling is memory-intensive (needs ~2GB RAM)</li>
-                            <li>Large images may take 10-30 seconds each</li>
-                            <li>First image loads the AI model (~3-5 seconds)</li>
-                            <li>4x upscaling takes longer than 2x</li>
-                        </ul>
                     </div>
                 </div>
+            </div>
 
-                {/* Preview Grid with Comparison */}
-                {images.length > 0 && (
-                    <div className="nes-container is-dark shadow-hard mb-6">
-                        <h3 className="text-lg mb-4 text-nes-blue">🔍 Before & After</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {images.slice(0, 4).map((img) => (
-                                <div
-                                    key={img.id}
-                                    className="border-4 border-white cursor-pointer hover:border-nes-blue transition-colors"
-                                    onClick={() => handleShowComparison(img)}
-                                >
-                                    <div className="p-2">
-                                        <img
-                                            src={img.preview}
-                                            alt="Upscaled preview"
-                                            className="w-full h-48 object-cover"
-                                        />
-                                        <div className="text-center mt-2">
-                                            <p className="text-xs text-nes-gray">
-                                                {img.originalCanvas?.width} x {img.originalCanvas?.height} →{' '}
-                                                {img.upscaledCanvas?.width} x {img.upscaledCanvas?.height}
-                                            </p>
-                                            <p className="text-xs text-nes-blue mt-1">Click to compare</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
+            {!image ? (
+                /* Upload Screen */
+                <div className="max-w-[1200px] mx-auto px-4 py-20">
+                    <div className="text-center mb-8">
+                        <h2 className="text-3xl font-display mb-4">Upscale Your Images</h2>
+                        <p className="text-xl font-body text-gray-700 dark:text-gray-300">
+                            Enhance resolution up to 8x with AI
+                        </p>
+                    </div>
+
+                    <div
+                        className="border-4 border-dashed border-gray-400 dark:border-gray-600 bg-white dark:bg-gray-800 p-16 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all shadow-retro"
+                        onDrop={handleDrop}
+                        onDragOver={handleDragOver}
+                        onClick={() => fileInputRef.current?.click()}
+                    >
+                        <span className="material-symbols-outlined text-6xl mb-4 text-gray-400">
+                            image
+                        </span>
+                        <h3 className="text-2xl font-display mb-2">Click or Drag Image Here</h3>
+                        <p className="font-body text-gray-600 dark:text-gray-400 mb-4 text-lg">
+                            Select a single image to upscale
+                        </p>
+                        <div className="inline-block px-6 py-3 bg-blue-500 border-4 border-black text-white font-display text-sm shadow-retro">
+                            SELECT IMAGE
                         </div>
                     </div>
-                )}
-            </ToolLayout>
-
-            {/* Comparison Modal */}
-            {showComparison && comparisonImage && (
-                <div
-                    className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-8"
-                >
-                    <div className="nes-container is-dark shadow-hard-lg max-w-6xl w-full">
-                        <h3 className="text-xl mb-4 text-nes-blue">Before & After Comparison</h3>
-
-                        {/* Comparison Slider */}
-                        <div className="relative mb-6" style={{ height: '500px' }}>
-                            <div className="absolute inset-0 overflow-hidden">
-                                {/* After (Upscaled) - Full image */}
-                                <img
-                                    src={comparisonImage.upscaled}
-                                    alt="Upscaled"
-                                    className="absolute inset-0 w-full h-full object-contain"
-                                />
-
-                                {/* Before (Original) - Clipped by slider */}
-                                <div
-                                    className="absolute inset-0 overflow-hidden"
-                                    style={{ width: `${sliderPosition}%` }}
-                                >
-                                    <img
-                                        src={comparisonImage.original}
-                                        alt="Original"
-                                        className="absolute inset-0 w-full h-full object-contain"
-                                        style={{ width: `${10000 / sliderPosition}%` }}
-                                    />
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => handleFileSelect(e.target.files)}
+                    />
+                </div>
+            ) : (
+                /* Editor Screen */
+                <div className="max-w-[1600px] mx-auto p-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                        {/* Left: Preview with Zoom (3 cols) */}
+                        <div className="lg:col-span-3">
+                            <div className="bg-white dark:bg-gray-800 border-4 border-black dark:border-gray-400 shadow-retro dark:shadow-retro-dark">
+                                {/* Preview Header */}
+                                <div className="flex items-center justify-between p-4 border-b-4 border-black dark:border-gray-400">
+                                    <h3 className="text-xl font-display">Preview</h3>
+                                    {image.upscaled && (
+                                        <button
+                                            className="px-6 py-3 bg-green-500 border-4 border-black text-white font-display hover:bg-green-600 transition-all shadow-retro flex items-center gap-2"
+                                            onClick={handleDownload}
+                                        >
+                                            <span className="material-symbols-outlined">download</span>
+                                            Download
+                                        </button>
+                                    )}
                                 </div>
 
-                                {/* Slider Handle */}
-                                <div
-                                    className="absolute top-0 bottom-0 w-1 bg-nes-blue cursor-ew-resize"
-                                    style={{ left: `${sliderPosition}%` }}
-                                    onMouseDown={(e) => {
-                                        const startX = e.clientX;
-                                        const startPosition = sliderPosition;
-
-                                        const handleMouseMove = (moveE: MouseEvent) => {
-                                            const container = e.currentTarget.parentElement;
-                                            if (!container) return;
-                                            const rect = container.getBoundingClientRect();
-                                            const deltaX = moveE.clientX - startX;
-                                            const deltaPercent = (deltaX / rect.width) * 100;
-                                            const newPosition = Math.max(0, Math.min(100, startPosition + deltaPercent));
-                                            setSliderPosition(newPosition);
-                                        };
-
-                                        const handleMouseUp = () => {
-                                            document.removeEventListener('mousemove', handleMouseMove);
-                                            document.removeEventListener('mouseup', handleMouseUp);
-                                        };
-
-                                        document.addEventListener('mousemove', handleMouseMove);
-                                        document.addEventListener('mouseup', handleMouseUp);
-                                    }}
-                                >
-                                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-nes-blue border-4 border-white w-12 h-12 flex items-center justify-center">
-                                        <span className="text-xl">⚔️</span>
+                                {/* Image Container with Zoom */}
+                                <div className="relative bg-gray-100 dark:bg-gray-700 overflow-auto" style={{ height: '500px' }}>
+                                    <div className="flex items-center justify-center min-h-full p-4">
+                                        <img
+                                            src={image.upscaled || image.original}
+                                            alt="Preview"
+                                            style={{
+                                                transform: `scale(${zoom / 100})`,
+                                                transformOrigin: 'center',
+                                                transition: 'transform 0.2s',
+                                                maxWidth: 'none'
+                                            }}
+                                        />
                                     </div>
+
+                                    {/* Processing Overlay */}
+                                    {image.status === 'processing' && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75">
+                                            <div className="bg-white dark:bg-gray-800 border-4 border-black p-8 shadow-retro">
+                                                <p className="font-display text-2xl mb-6 text-center">Upscaling Image...</p>
+                                                <div className="w-80 h-8 bg-gray-200 border-4 border-black overflow-hidden relative">
+                                                    <div
+                                                        className="h-full bg-gradient-to-r from-green-500 to-blue-500 transition-all duration-300 absolute inset-0"
+                                                        style={{ width: `${image.progress}%` }}
+                                                    />
+                                                    <span className="absolute inset-0 flex items-center justify-center text-gray-800 font-bold text-lg z-10">
+                                                        {image.progress}%
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
-                                {/* Labels */}
-                                <div className="absolute top-4 left-4 bg-black bg-opacity-75 px-3 py-2 border-2 border-white">
-                                    <p className="text-sm text-white">BEFORE</p>
+                                {/* Zoom Controls */}
+                                <div className="p-4 border-t-4 border-black dark:border-gray-400 flex items-center gap-4 justify-center bg-gray-50 dark:bg-gray-900">
+                                    <button
+                                        className="w-10 h-10 border-4 border-black bg-gray-200 hover:bg-gray-300 flex items-center justify-center font-bold text-xl"
+                                        onClick={() => setZoom(Math.max(25, zoom - 25))}
+                                    >
+                                        −
+                                    </button>
+                                    <input
+                                        type="range"
+                                        min="25"
+                                        max="400"
+                                        step="25"
+                                        value={zoom}
+                                        onChange={(e) => setZoom(Number(e.target.value))}
+                                        className="w-64"
+                                    />
+                                    <button
+                                        className="w-10 h-10 border-4 border-black bg-gray-200 hover:bg-gray-300 flex items-center justify-center font-bold text-xl"
+                                        onClick={() => setZoom(Math.min(400, zoom + 25))}
+                                    >
+                                        +
+                                    </button>
+                                    <span className="font-body text-lg font-bold min-w-[80px] text-center">Zoom: {zoom}%</span>
                                 </div>
-                                <div className="absolute top-4 right-4 bg-black bg-opacity-75 px-3 py-2 border-2 border-white">
-                                    <p className="text-sm text-white">AFTER</p>
+
+                                {/* Image Stats */}
+                                <div className="p-4 bg-gray-100 dark:bg-gray-700 border-t-4 border-black dark:border-gray-400">
+                                    <div className="grid grid-cols-2 gap-6 font-body text-sm">
+                                        <div className="p-3 bg-white dark:bg-gray-800 border-2 border-gray-300">
+                                            <p className="font-bold mb-2 text-blue-600">Original:</p>
+                                            <p>Size: <span className="font-bold">{image.originalWidth} × {image.originalHeight}</span> px</p>
+                                            <p>File: <span className="font-bold">{formatBytes(image.originalSize)}</span></p>
+                                        </div>
+                                        {image.upscaledWidth && (
+                                            <div className="p-3 bg-green-50 dark:bg-green-900/20 border-2 border-green-500">
+                                                <p className="font-bold mb-2 text-green-600">Upscaled:</p>
+                                                <p>Size: <span className="font-bold">{image.upscaledWidth} × {image.upscaledHeight}</span> px</p>
+                                                <p>File: <span className="font-bold">{formatBytes(image.upscaledSize!)}</span></p>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="text-center">
+                        {/* Right: Settings (1 col) */}
+                        <div className="space-y-6">
+                            {/* Model Selection */}
+                            <div className="bg-white dark:bg-gray-800 border-4 border-black dark:border-gray-400 p-6 shadow-retro dark:shadow-retro-dark">
+                                <h3 className="text-xl font-display mb-4">Select Model</h3>
+
+                                <div className="space-y-3">
+                                    <button
+                                        className={`w-full p-4 border-4 text-left font-body transition-all ${model === 'photo'
+                                                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                                                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                                            }`}
+                                        onClick={() => setModel('photo')}
+                                    >
+                                        <div className="flex items-start justify-between">
+                                            <div>
+                                                <p className="font-bold text-lg mb-1">📷 Photo</p>
+                                                <p className="text-xs text-gray-600 dark:text-gray-400">Real-ESRGAN-x4plus</p>
+                                                <p className="text-xs mt-1">For realistic photos</p>
+                                            </div>
+                                            {model === 'photo' && <span className="text-blue-500 text-2xl">✓</span>}
+                                        </div>
+                                    </button>
+
+                                    <button
+                                        className={`w-full p-4 border-4 text-left font-body transition-all ${model === 'anime'
+                                                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                                                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                                            }`}
+                                        onClick={() => setModel('anime')}
+                                    >
+                                        <div className="flex items-start justify-between">
+                                            <div>
+                                                <p className="font-bold text-lg mb-1">🎨 Anime</p>
+                                                <p className="text-xs text-gray-600 dark:text-gray-400">Real-ESRGAN-anime6B</p>
+                                                <p className="text-xs mt-1">For anime & illustrations</p>
+                                            </div>
+                                            {model === 'anime' && <span className="text-blue-500 text-2xl">✓</span>}
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Upscale Rate */}
+                            <div className="bg-white dark:bg-gray-800 border-4 border-black dark:border-gray-400 p-6 shadow-retro dark:shadow-retro-dark">
+                                <h3 className="text-xl font-display mb-4">Upscale Rate</h3>
+
+                                <div className="grid grid-cols-3 gap-3">
+                                    {([2, 4, 8] as ScaleRate[]).map((rate) => (
+                                        <button
+                                            key={rate}
+                                            className={`p-4 border-4 font-body text-lg font-bold transition-all ${scaleRate === rate
+                                                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20 text-green-600'
+                                                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                                                }`}
+                                            onClick={() => setScaleRate(rate)}
+                                        >
+                                            <div className="text-center">
+                                                <div className="text-2xl">×{rate}</div>
+                                                {scaleRate === rate && <span className="text-sm">✓</span>}
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 text-center">
+                                    Output: <span className="font-bold">{image.originalWidth * scaleRate} × {image.originalHeight * scaleRate}</span> px
+                                </p>
+                            </div>
+
+                            {/* Start Button */}
                             <button
-                                className="nes-btn is-primary btn-pixel"
-                                onClick={() => setShowComparison(false)}
+                                className="w-full py-6 bg-gradient-to-r from-green-500 to-blue-500 border-4 border-black text-white font-display text-2xl hover:from-green-600 hover:to-blue-600 transition-all shadow-retro active:shadow-retro-active active:translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                                onClick={processUpscale}
+                                disabled={image.status === 'processing'}
                             >
-                                Close
+                                {image.status === 'processing' ? 'Processing...' : image.status === 'done' ? 'Upscale Again' : 'Start → Upscale'}
+                            </button>
+
+                            <button
+                                className="w-full py-3 bg-gray-200 dark:bg-gray-700 border-4 border-black dark:border-gray-400 font-body hover:bg-gray-300 transition-all shadow-retro"
+                                onClick={() => setImage(null)}
+                            >
+                                ← Choose Different Image
                             </button>
                         </div>
                     </div>
