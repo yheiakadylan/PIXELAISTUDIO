@@ -64,7 +64,7 @@ const RemBg: React.FC = () => {
 
         try {
             const blob = await removeBackground(file, {
-                model: 'isnet_fp16',
+                model: 'isnet_fp16', // Highest quality model
                 output: {
                     quality: 1.0,
                     format: 'image/png'
@@ -275,13 +275,15 @@ const RemBg: React.FC = () => {
                                     <div className="relative inline-block">
                                         {/* Bottom Layer: Processed Image (After - Right side) */}
                                         {selectedImage.processed && (
-                                            <img
-                                                src={selectedImage.processed}
-                                                alt="After"
-                                                className="max-h-[468px] block pointer-events-none"
-                                                style={{ maxWidth: '100%' }}
-                                                draggable={false}
-                                            />
+                                            <div className="checkerboard">
+                                                <img
+                                                    src={selectedImage.processed}
+                                                    alt="After"
+                                                    className="max-h-[468px] block pointer-events-none"
+                                                    style={{ maxWidth: '100%' }}
+                                                    draggable={false}
+                                                />
+                                            </div>
                                         )}
 
                                         {/* Top Layer: Original Image (Before - Left side, clipped) */}
@@ -327,13 +329,14 @@ const RemBg: React.FC = () => {
                                         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75">
                                             <div className="bg-white dark:bg-gray-800 border-4 border-black p-8 shadow-retro">
                                                 <p className="font-display text-2xl mb-6 text-center">Removing Background...</p>
-                                                <div className="w-80 h-8 bg-gray-200 border-4 border-black overflow-hidden">
+                                                <div className="w-80 h-8 bg-gray-200 border-4 border-black overflow-hidden relative">
                                                     <div
-                                                        className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300 flex items-center justify-center"
+                                                        className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300 flex items-center justify-center absolute inset-0"
                                                         style={{ width: `${selectedImage.progress}%` }}
-                                                    >
-                                                        <span className="text-white font-bold text-lg">{selectedImage.progress}%</span>
-                                                    </div>
+                                                    />
+                                                    <span className="absolute inset-0 flex items-center justify-center text-gray-800 font-bold text-lg z-10">
+                                                        {selectedImage.progress}%
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
@@ -386,9 +389,9 @@ const RemBg: React.FC = () => {
                                         {img.status === 'processing' && (
                                             <div className="absolute inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center">
                                                 <p className="text-white font-bold text-sm mb-3">{img.progress}%</p>
-                                                <div className="w-3/4 h-3 bg-gray-700 border-2 border-white overflow-hidden">
+                                                <div className="w-3/4 h-3 bg-gray-700 border-2 border-white overflow-hidden relative">
                                                     <div
-                                                        className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all"
+                                                        className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all absolute"
                                                         style={{ width: `${img.progress}%` }}
                                                     />
                                                 </div>
