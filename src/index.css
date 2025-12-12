@@ -1,0 +1,165 @@
+/* Import Press Start 2P Font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+/* Import NES.css for 8-bit styling */
+@import 'nes.css/css/nes.min.css';
+
+/* Import Tailwind CSS */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Press Start 2P', cursive;
+  background-color: #212529;
+  color: #fff;
+  line-height: 1.6;
+}
+
+/* Custom Cursor */
+body {
+  cursor: url('/cursor-hand.png'), auto;
+}
+
+button,
+a,
+input,
+select {
+  cursor: url('/cursor-pointer.png'), pointer;
+}
+
+/* Disable border-radius globally */
+* {
+  border-radius: 0 !important;
+}
+
+/* Hard Shadow Utility (No Blur) */
+.shadow-hard {
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.8);
+}
+
+.shadow-hard-sm {
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.8);
+}
+
+.shadow-hard-lg {
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.8);
+}
+
+/* Pixel Perfect Animations */
+@keyframes bounce-pixel {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-bounce-pixel {
+  animation: bounce-pixel 0.3s ease-in-out;
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.3s ease-out;
+}
+
+/* Pixel Button Hover Effect */
+.btn-pixel {
+  transition: transform 0.1s ease;
+}
+
+.btn-pixel:hover {
+  transform: translateY(-4px);
+}
+
+.btn-pixel:active {
+  transform: translateY(2px);
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: #212529;
+  border: 2px solid #fff;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #209cee;
+  border: 2px solid #fff;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #92cc41;
+}
+
+/* Checkerboard Pattern for Transparency Preview */
+.checkerboard {
+  background-image:
+    linear-gradient(45deg, #ccc 25%, transparent 25%),
+    linear-gradient(-45deg, #ccc 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #ccc 75%),
+    linear-gradient(-45deg, transparent 75%, #ccc 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+
+/* Pixel Art Image Rendering */
+img {
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+/* NES.css Overrides */
+.nes-container {
+  background-color: #212529;
+  color: #fff;
+}
+
+.nes-btn {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 12px;
+}
+
+/* Focus Styles */
+.nes-input:focus,
+.nes-select:focus,
+.nes-textarea:focus {
+  outline: 2px solid #209cee;
+  outline-offset: 4px;
+}
