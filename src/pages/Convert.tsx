@@ -125,12 +125,12 @@ const Convert: React.FC = () => {
     }, []);
 
     return (
-        <div className="min-h-screen bg-retro-bg dark:bg-retro-bg-dark transition-colors">
+        <div className="min-h-screen bg-retro-bg dark:bg-retro-bg-dark transition-theme animate-fadeIn">
             {/* Header */}
-            <div className="border-b-4 border-black dark:border-gray-400 bg-white dark:bg-gray-800 p-4">
+            <div className="border-b-4 border-black dark:border-gray-400 bg-white dark:bg-gray-800 p-4 transition-theme">
                 <div className="max-w-7xl mx-auto flex items-center justify-center gap-4">
                     <button
-                        className="px-4 py-2 bg-gray-200 dark:bg-gray-700 border-4 border-black dark:border-gray-400 font-display text-sm hover:bg-gray-300 dark:hover:bg-gray-600 transition-all shadow-retro active:shadow-retro-active active:translate-y-1 absolute left-4"
+                        className="px-4 py-2 bg-gray-200 dark:bg-gray-700 border-4 border-black dark:border-gray-400 font-display text-sm hover:bg-gray-300 dark:hover:bg-gray-600 transition-all duration-200 shadow-retro btn-lift absolute left-4"
                         onClick={() => navigate('/')}
                     >
                         ← Back
@@ -155,7 +155,7 @@ const Convert: React.FC = () => {
                     </div>
 
                     <div
-                        className="border-4 border-dashed border-gray-400 dark:border-gray-600 bg-white dark:bg-gray-800 p-16 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all shadow-retro"
+                        className="border-4 border-dashed border-gray-400 dark:border-gray-600 bg-white dark:bg-gray-800 p-16 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300 shadow-retro animate-pulse"
                         onDrop={handleDrop}
                         onDragOver={handleDragOver}
                         onClick={() => fileInputRef.current?.click()}
@@ -252,8 +252,8 @@ const Convert: React.FC = () => {
                                     <label className="block text-base font-body mb-3">Conversion Mode:</label>
                                     <div className="grid grid-cols-2 gap-3">
                                         <button
-                                            className={`p-3 border-4 transition-all ${conversionMode === 'batch'
-                                                ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                                            className={`p-3 border-4 transition-all duration-200 ${conversionMode === 'batch'
+                                                ? 'border-green-500 bg-green-50 dark:bg-green-900/20 scale-105'
                                                 : 'border-gray-300 dark:border-gray-600'
                                                 }`}
                                             onClick={() => setConversionMode('batch')}
@@ -262,8 +262,8 @@ const Convert: React.FC = () => {
                                             {conversionMode === 'batch' && <span className="text-green-500 text-xl">✓</span>}
                                         </button>
                                         <button
-                                            className={`p-3 border-4 transition-all ${conversionMode === 'individual'
-                                                ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                                            className={`p-3 border-4 transition-all duration-200 ${conversionMode === 'individual'
+                                                ? 'border-green-500 bg-green-50 dark:bg-green-900/20 scale-105'
                                                 : 'border-gray-300 dark:border-gray-600'
                                                 }`}
                                             onClick={() => setConversionMode('individual')}
@@ -335,7 +335,7 @@ const Convert: React.FC = () => {
 
                             {/* Convert Button */}
                             <button
-                                className="w-full px-6 py-4 bg-blue-500 border-4 border-black text-white font-display text-base hover:bg-blue-600 transition-all shadow-retro active:shadow-retro-active active:translate-y-1 flex items-center justify-center gap-2"
+                                className="w-full px-6 py-4 bg-blue-500 border-4 border-black text-white font-display text-base hover:bg-blue-600 transition-all duration-200 shadow-retro btn-lift flex items-center justify-center gap-2"
                                 onClick={handleConvert}
                             >
                                 Convert IMAGES

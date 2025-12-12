@@ -161,12 +161,12 @@ const Upscale: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-retro-bg dark:bg-retro-bg-dark transition-colors">
+        <div className="min-h-screen bg-retro-bg dark:bg-retro-bg-dark transition-theme animate-fadeIn">
             {/* Header */}
-            <div className="border-b-4 border-black dark:border-gray-400 bg-white dark:bg-gray-800 p-4">
+            <div className="border-b-4 border-black dark:border-gray-400 bg-white dark:bg-gray-800 p-4 transition-theme">
                 <div className="max-w-7xl mx-auto flex items-center justify-center gap-4">
                     <button
-                        className="px-4 py-2 bg-gray-200 dark:bg-gray-700 border-4 border-black dark:border-gray-400 font-display text-sm hover:bg-gray-300 dark:hover:bg-gray-600 transition-all shadow-retro active:shadow-retro-active active:translate-y-1 absolute left-4"
+                        className="px-4 py-2 bg-gray-200 dark:bg-gray-700 border-4 border-black dark:border-gray-400 font-display text-sm hover:bg-gray-300 dark:hover:bg-gray-600 transition-all duration-200 shadow-retro btn-lift absolute left-4"
                         onClick={() => navigate('/')}
                     >
                         ← Back
@@ -191,7 +191,7 @@ const Upscale: React.FC = () => {
                     </div>
 
                     <div
-                        className="border-4 border-dashed border-gray-400 dark:border-gray-600 bg-white dark:bg-gray-800 p-16 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all shadow-retro"
+                        className="border-4 border-dashed border-gray-400 dark:border-gray-600 bg-white dark:bg-gray-800 p-16 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300 shadow-retro animate-pulse"
                         onDrop={handleDrop}
                         onDragOver={handleDragOver}
                         onClick={() => fileInputRef.current?.click()}
@@ -227,7 +227,7 @@ const Upscale: React.FC = () => {
                                     <h3 className="text-xl font-display">Preview</h3>
                                     {image.upscaled && (
                                         <button
-                                            className="px-6 py-3 bg-green-500 border-4 border-black text-white font-display hover:bg-green-600 transition-all shadow-retro flex items-center gap-2"
+                                            className="px-6 py-3 bg-green-500 border-4 border-black text-white font-display hover:bg-green-600 transition-all duration-200 shadow-retro btn-lift flex items-center gap-2"
                                             onClick={handleDownload}
                                         >
                                             <span className="material-symbols-outlined">download</span>
@@ -259,7 +259,7 @@ const Upscale: React.FC = () => {
                                                 <p className="font-display text-2xl mb-6 text-center">Upscaling Image...</p>
                                                 <div className="w-80 h-8 bg-gray-200 border-4 border-black overflow-hidden relative">
                                                     <div
-                                                        className="h-full bg-gradient-to-r from-green-500 to-blue-500 transition-all duration-300 absolute inset-0"
+                                                        className="h-full bg-gradient-to-r from-green-500 to-blue-500 transition-all duration-300 absolute inset-0 shimmer"
                                                         style={{ width: `${image.progress}%` }}
                                                     />
                                                     <span className="absolute inset-0 flex items-center justify-center text-gray-800 font-bold text-lg z-10">
@@ -389,7 +389,7 @@ const Upscale: React.FC = () => {
 
                             {/* Start Button */}
                             <button
-                                className="w-full py-6 bg-gradient-to-r from-green-500 to-blue-500 border-4 border-black text-white font-display text-2xl hover:from-green-600 hover:to-blue-600 transition-all shadow-retro active:shadow-retro-active active:translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full py-6 bg-gradient-to-r from-green-500 to-blue-500 border-4 border-black text-white font-display text-2xl hover:from-green-600 hover:to-blue-600 transition-all duration-200 shadow-retro btn-lift disabled:opacity-50 disabled:cursor-not-allowed"
                                 onClick={processUpscale}
                                 disabled={image.status === 'processing'}
                             >

@@ -170,15 +170,15 @@ const Resize: React.FC = () => {
     }, []);
 
     return (
-        <div className="min-h-screen bg-retro-bg dark:bg-retro-bg-dark transition-colors">
+        <div className="min-h-screen bg-retro-bg dark:bg-retro-bg-dark transition-theme animate-fadeIn">
             {/* Background Pattern */}
             <div className="fixed inset-0 -z-10 bg-[linear-gradient(45deg,#c4c4c4_25%,transparent_25%,transparent_75%,#c4c4c4_75%,#c4c4c4),linear-gradient(45deg,#c4c4c4_25%,transparent_25%,transparent_75%,#c4c4c4_75%,#c4c4c4)] bg-[length:20px_20px] bg-[position:0_0,10px_10px] dark:bg-[linear-gradient(45deg,#222_25%,transparent_25%,transparent_75%,#222_75%,#222),linear-gradient(45deg,#222_25%,transparent_25%,transparent_75%,#222_75%,#222)]" />
 
             {/* Header */}
-            <div className="border-b-4 border-black dark:border-gray-400 bg-white dark:bg-gray-800 p-4">
+            <div className="border-b-4 border-black dark:border-gray-400 bg-white dark:bg-gray-800 p-4 transition-theme">
                 <div className="max-w-7xl mx-auto flex items-center justify-center gap-4">
                     <button
-                        className="px-4 py-2 bg-gray-200 dark:bg-gray-700 border-4 border-black dark:border-gray-400 font-display text-sm hover:bg-gray-300 dark:hover:bg-gray-600 transition-all shadow-retro active:shadow-retro-active active:translate-y-1 absolute left-4"
+                        className="px-4 py-2 bg-gray-200 dark:bg-gray-700 border-4 border-black dark:border-gray-400 font-display text-sm hover:bg-gray-300 dark:hover:bg-gray-600 transition-all duration-200 shadow-retro btn-lift absolute left-4"
                         onClick={() => navigate('/')}
                     >
                         ← Back
@@ -213,7 +213,7 @@ const Resize: React.FC = () => {
                     </div>
 
                     <div
-                        className="bg-white dark:bg-gray-800 border-4 border-black dark:border-gray-400 p-16 text-center shadow-retro dark:shadow-retro-dark cursor-pointer hover:translate-y-1 transition-all"
+                        className="bg-white dark:bg-gray-800 border-4 border-black dark:border-gray-400 p-16 text-center shadow-retro dark:shadow-retro-dark cursor-pointer hover:translate-y-1 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300 animate-pulse"
                         onDrop={handleDrop}
                         onDragOver={handleDragOver}
                         onClick={() => fileInputRef.current?.click()}
@@ -241,7 +241,7 @@ const Resize: React.FC = () => {
                     <div className="flex-1">
                         <div className="mb-4">
                             <button
-                                className="px-6 py-3 bg-gray-800 dark:bg-gray-700 text-white border-4 border-black dark:border-white font-display text-xs hover:translate-y-1 transition-all shadow-retro flex items-center gap-2"
+                                className="px-6 py-3 bg-gray-800 dark:bg-gray-700 text-white border-4 border-black dark:border-white font-display text-xs hover:translate-y-1 transition-all duration-200 shadow-retro btn-lift flex items-center gap-2"
                                 onClick={() => fileInputRef.current?.click()}
                             >
                                 <span className="text-2xl">+</span>
@@ -442,7 +442,7 @@ const Resize: React.FC = () => {
 
                                 {/* Resize Button */}
                                 <button
-                                    className="w-full px-6 py-4 bg-blue-500 border-4 border-black text-white font-display text-base hover:bg-blue-600 transition-all shadow-retro active:shadow-retro-active active:translate-y-1 flex items-center justify-center gap-2"
+                                    className="w-full px-6 py-4 bg-blue-500 border-4 border-black text-white font-display text-base hover:bg-blue-600 transition-all duration-200 shadow-retro btn-lift flex items-center justify-center gap-2"
                                     onClick={handleResize}
                                 >
                                     Resize IMAGES

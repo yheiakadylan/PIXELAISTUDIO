@@ -103,7 +103,7 @@ const CraftModal: React.FC<CraftModalProps> = ({ isOpen, onClose }) => {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-85 animate-fadeIn">
             {/* Modal Content */}
-            <div className="relative w-full max-w-4xl bg-white dark:bg-gray-800 border-6 border-black dark:border-gray-400 shadow-retro-xl max-h-[90vh] overflow-auto">
+            <div className="relative w-full max-w-4xl bg-white dark:bg-gray-800 border-6 border-black dark:border-gray-400 shadow-retro-xl max-h-[90vh] overflow-auto transition-theme animate-scaleIn">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-blue-500 to-purple-500 border-b-6 border-black dark:border-gray-400 p-6 flex items-center justify-between">
                     <div>
@@ -111,7 +111,7 @@ const CraftModal: React.FC<CraftModalProps> = ({ isOpen, onClose }) => {
                         <p className="text-sm text-white/90 font-body">Upload your images, then choose your tool</p>
                     </div>
                     <button
-                        className="w-12 h-12 bg-red-500 border-4 border-black text-white font-bold text-2xl hover:bg-red-600 transition-all shadow-retro"
+                        className="w-12 h-12 bg-red-500 border-4 border-black text-white font-bold text-2xl hover:bg-red-600 transition-all duration-200 shadow-retro btn-lift"
                         onClick={onClose}
                     >
                         ×
@@ -122,9 +122,9 @@ const CraftModal: React.FC<CraftModalProps> = ({ isOpen, onClose }) => {
                 <div className="p-6">
                     {uploadedFiles.length === 0 ? (
                         <div
-                            className={`border-4 border-dashed p-12 text-center cursor-pointer transition-all ${isDragging
-                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                                    : 'border-gray-400 dark:border-gray-600 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20'
+                            className={`border-4 border-dashed p-12 text-center cursor-pointer transition-all duration-300 ${isDragging
+                                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 scale-105'
+                                : 'border-gray-400 dark:border-gray-600 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 animate-pulse'
                                 }`}
                             onDrop={handleDrop}
                             onDragOver={handleDragOver}
@@ -160,7 +160,7 @@ const CraftModal: React.FC<CraftModalProps> = ({ isOpen, onClose }) => {
                                             {uf.file.name}
                                         </p>
                                         <button
-                                            className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 border-2 border-black text-white text-xs font-bold rounded-full hover:bg-red-600"
+                                            className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 border-2 border-black text-white text-xs font-bold rounded-full hover:bg-red-600 hover:scale-110 transition-all duration-200"
                                             onClick={() => removeFile(index)}
                                         >
                                             ×
@@ -170,7 +170,7 @@ const CraftModal: React.FC<CraftModalProps> = ({ isOpen, onClose }) => {
 
                                 {/* Add More Button */}
                                 <div
-                                    className="border-4 border-dashed border-gray-400 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 p-2 flex items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
+                                    className="border-4 border-dashed border-gray-400 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 p-2 flex items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:scale-105 transition-all duration-300"
                                     onClick={() => fileInputRef.current?.click()}
                                 >
                                     <div className="text-center">
@@ -193,7 +193,7 @@ const CraftModal: React.FC<CraftModalProps> = ({ isOpen, onClose }) => {
                                     {tools.map(tool => (
                                         <button
                                             key={tool.id}
-                                            className={`p-6 border-4 border-black dark:border-gray-400 bg-${tool.color}-100 dark:bg-${tool.color}-900/20 hover:bg-${tool.color}-200 dark:hover:bg-${tool.color}-800/30 transition-all shadow-retro hover:shadow-retro-active hover:translate-y-1 group`}
+                                            className={`p-6 border-4 border-black dark:border-gray-400 bg-${tool.color}-100 dark:bg-${tool.color}-900/20 hover:bg-${tool.color}-200 dark:hover:bg-${tool.color}-800/30 hover:scale-105 transition-all duration-200 shadow-retro btn-lift group`}
                                             onClick={() => handleToolClick(tool.id)}
                                         >
                                             <span className="material-symbols-outlined text-5xl mb-2 block text-center">

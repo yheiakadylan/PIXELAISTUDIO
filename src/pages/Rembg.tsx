@@ -186,12 +186,12 @@ const RemBg: React.FC = () => {
     const isDragging = useRef(false);
 
     return (
-        <div className="min-h-screen bg-retro-bg dark:bg-retro-bg-dark transition-colors">
+        <div className="min-h-screen bg-retro-bg dark:bg-retro-bg-dark transition-theme animate-fadeIn">
             {/* Header */}
-            <div className="border-b-4 border-black dark:border-gray-400 bg-white dark:bg-gray-800 p-4">
+            <div className="border-b-4 border-black dark:border-gray-400 bg-white dark:bg-gray-800 p-4 transition-theme">
                 <div className="max-w-7xl mx-auto flex items-center justify-center gap-4">
                     <button
-                        className="px-4 py-2 bg-gray-200 dark:bg-gray-700 border-4 border-black dark:border-gray-400 font-display text-sm hover:bg-gray-300 dark:hover:bg-gray-600 transition-all shadow-retro active:shadow-retro-active active:translate-y-1 absolute left-4"
+                        className="px-4 py-2 bg-gray-200 dark:bg-gray-700 border-4 border-black dark:border-gray-400 font-display text-sm hover:bg-gray-300 dark:hover:bg-gray-600 transition-all duration-200 shadow-retro btn-lift absolute left-4"
                         onClick={() => navigate('/')}
                     >
                         ← Back
@@ -216,7 +216,7 @@ const RemBg: React.FC = () => {
                     </div>
 
                     <div
-                        className="border-4 border-dashed border-gray-400 dark:border-gray-600 bg-white dark:bg-gray-800 p-16 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all shadow-retro"
+                        className="border-4 border-dashed border-gray-400 dark:border-gray-600 bg-white dark:bg-gray-800 p-16 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300 shadow-retro animate-pulse"
                         onDrop={handleDrop}
                         onDragOver={handleDragOver}
                         onClick={() => fileInputRef.current?.click()}
@@ -245,12 +245,12 @@ const RemBg: React.FC = () => {
                 /* Preview + Gallery */
                 <div className="max-w-[1800px] mx-auto p-8">
                     {/* Large Preview with Before/After Slider */}
-                    <div className="bg-white dark:bg-gray-800 border-4 border-black dark:border-gray-400 p-6 shadow-retro dark:shadow-retro-dark mb-6">
+                    <div className="bg-white dark:bg-gray-800 border-4 border-black dark:border-gray-400 p-6 shadow-retro dark:shadow-retro-dark mb-6 transition-theme animate-scaleIn">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-2xl font-display">Preview</h3>
                             <div className="flex gap-4">
                                 <button
-                                    className="px-6 py-3 bg-green-500 border-4 border-black text-white font-display hover:bg-green-600 transition-all shadow-retro flex items-center gap-2"
+                                    className="px-6 py-3 bg-green-500 border-4 border-black text-white font-display hover:bg-green-600 transition-all duration-200 shadow-retro btn-lift flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                     onClick={handleDownloadAll}
                                     disabled={images.filter(i => i.status === 'done').length === 0}
                                 >
@@ -258,7 +258,7 @@ const RemBg: React.FC = () => {
                                     Save All
                                 </button>
                                 <button
-                                    className="px-4 py-2 bg-blue-500 border-4 border-black text-white font-body hover:bg-blue-600 transition-all shadow-retro"
+                                    className="px-4 py-2 bg-blue-500 border-4 border-black text-white font-body hover:bg-blue-600 transition-all duration-200 shadow-retro btn-lift disabled:opacity-50 disabled:cursor-not-allowed"
                                     onClick={() => selectedImage && handleDownload(selectedImage)}
                                     disabled={!selectedImage?.processed}
                                 >
@@ -357,7 +357,7 @@ const RemBg: React.FC = () => {
                                                 <p className="font-display text-2xl mb-6 text-center">Removing Background...</p>
                                                 <div className="w-80 h-8 bg-gray-200 border-4 border-black overflow-hidden relative">
                                                     <div
-                                                        className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300 flex items-center justify-center absolute inset-0"
+                                                        className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300 flex items-center justify-center absolute inset-0 shimmer"
                                                         style={{ width: `${selectedImage.progress}%` }}
                                                     />
                                                     <span className="absolute inset-0 flex items-center justify-center text-gray-800 font-bold text-lg z-10">
@@ -373,11 +373,11 @@ const RemBg: React.FC = () => {
                     </div>
 
                     {/* Thumbnail Gallery */}
-                    <div className="bg-white dark:bg-gray-800 border-4 border-black dark:border-gray-400 p-6 shadow-retro dark:shadow-retro-dark">
+                    <div className="bg-white dark:bg-gray-800 border-4 border-black dark:border-gray-400 p-6 shadow-retro dark:shadow-retro-dark transition-theme animate-slideInUp" style={{ animationDelay: '200ms' }}>
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-xl font-display">Images ({images.length})</h3>
                             <button
-                                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 border-4 border-black dark:border-gray-400 font-body text-sm hover:bg-gray-300 transition-all"
+                                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 border-4 border-black dark:border-gray-400 font-body text-sm hover:bg-gray-300 transition-all duration-200 shadow-retro btn-lift"
                                 onClick={() => fileInputRef.current?.click()}
                             >
                                 + Add More
@@ -388,11 +388,12 @@ const RemBg: React.FC = () => {
                             {images.map((img, index) => (
                                 <div
                                     key={img.id}
-                                    className={`relative cursor-pointer border-4 transition-all ${selectedIndex === index
-                                        ? 'border-blue-500 shadow-retro'
-                                        : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                                    className={`stagger-item relative cursor-pointer border-4 transition-all duration-200 ${selectedIndex === index
+                                        ? 'border-blue-500 shadow-retro scale-105'
+                                        : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 hover:scale-105'
                                         }`}
                                     onClick={() => setSelectedIndex(index)}
+                                    style={{ animationDelay: `${300 + index * 50}ms` }}
                                 >
                                     <button
                                         className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 border-4 border-black text-white flex items-center justify-center hover:bg-red-600 z-10"
