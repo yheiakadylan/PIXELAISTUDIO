@@ -1,7 +1,12 @@
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+
+/* Tailwind CSS */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Custom Utilities */
 @layer utilities {
   .text-shadow {
     text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.2);
@@ -10,6 +15,21 @@
   .dark .text-shadow-light {
     text-shadow: 2px 2px 0px #000;
   }
+}
+
+/* Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 /* Retro pixel cursors */
@@ -21,4 +41,15 @@ button,
 a,
 .cursor-pointer {
   cursor: url('/cursor-hand.png'), pointer;
+}
+
+/* Checkerboard Pattern for Transparency Preview */
+.checkerboard {
+  background-image:
+    linear-gradient(45deg, #ccc 25%, transparent 25%),
+    linear-gradient(-45deg, #ccc 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #ccc 75%),
+    linear-gradient(-45deg, transparent 75%, #ccc 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
 }
