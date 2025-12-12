@@ -227,10 +227,11 @@ const Upscale: React.FC = () => {
                                             src={image.upscaled || image.original}
                                             alt="Preview"
                                             style={{
-                                                transform: `scale(${zoom / 100})`,
+                                                maxHeight: '468px', // Fit to container (500px - padding)
+                                                width: 'auto',
+                                                transform: zoom !== 100 ? `scale(${zoom / 100})` : 'none',
                                                 transformOrigin: 'center',
-                                                transition: 'transform 0.2s',
-                                                maxWidth: 'none'
+                                                transition: 'transform 0.2s'
                                             }}
                                         />
                                     </div>
@@ -309,8 +310,8 @@ const Upscale: React.FC = () => {
                                 <div className="space-y-3">
                                     <button
                                         className={`w-full p-4 border-4 text-left font-body transition-all ${model === 'photo'
-                                                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                                                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                                            : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
                                             }`}
                                         onClick={() => setModel('photo')}
                                     >
@@ -326,8 +327,8 @@ const Upscale: React.FC = () => {
 
                                     <button
                                         className={`w-full p-4 border-4 text-left font-body transition-all ${model === 'anime'
-                                                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                                                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                                            : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
                                             }`}
                                         onClick={() => setModel('anime')}
                                     >
@@ -352,8 +353,8 @@ const Upscale: React.FC = () => {
                                         <button
                                             key={rate}
                                             className={`p-4 border-4 font-body text-lg font-bold transition-all ${scaleRate === rate
-                                                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20 text-green-600'
-                                                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                                                ? 'border-green-500 bg-green-50 dark:bg-green-900/20 text-green-600'
+                                                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
                                                 }`}
                                             onClick={() => setScaleRate(rate)}
                                         >
@@ -376,7 +377,7 @@ const Upscale: React.FC = () => {
                                 onClick={processUpscale}
                                 disabled={image.status === 'processing'}
                             >
-                                {image.status === 'processing' ? 'Processing...' : image.status === 'done' ? 'Upscale Again' : 'Start → Upscale'}
+                                {image.status === 'processing' ? 'Processing...' : image.status === 'done' ? 'Upscale Again' : 'Upscale'}
                             </button>
 
                             <button
