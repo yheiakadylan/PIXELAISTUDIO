@@ -20,7 +20,7 @@ const Home: React.FC = () => {
             color: 'is-success',
             icon: '🔄',
             path: '/convert',
-            comingSoon: true,
+            comingSoon: false,
         },
         {
             title: 'REMOVE BG',
@@ -41,7 +41,7 @@ const Home: React.FC = () => {
     ];
 
     return (
-        <div className="h-full bg-nes-dark flex flex-col overflow-hidden">
+        <div className="fixed inset-0 w-full h-full bg-nes-dark flex flex-col overflow-hidden">
             {/* Header - Compact and Clean */}
             <header className="flex justify-between items-center px-8 py-6 border-b-4 border-white bg-nes-dark shadow-hard">
                 <div className="flex items-center gap-6">
