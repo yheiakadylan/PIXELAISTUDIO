@@ -39,7 +39,7 @@ const Rembg: React.FC = () => {
 
                 // Remove background using AI
                 const blob = await removeBackground(file, {
-                    progress: (key: string, current: number, total: number) => {
+                    progress: (_key: string, current: number, total: number) => {
                         const fileProgress = (current / total) * 100;
                         const overallProgress = ((completed + fileProgress / 100) / files.length) * 100;
                         setProcessingProgress(Math.round(overallProgress));
