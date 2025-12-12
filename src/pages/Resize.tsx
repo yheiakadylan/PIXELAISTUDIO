@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ToolLayout from '../components/layout/ToolLayout';
 import { useFileSystem } from '../hooks/useFileSystem';
