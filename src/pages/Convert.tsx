@@ -120,7 +120,7 @@ const Convert: React.FC = () => {
 
             {images.length === 0 ? (
                 /* Upload Screen */
-                <div className="max-w-4xl mx-auto p-8">
+                <div className="max-w-[1200px] mx-auto p-8">
                     <div
                         className="border-4 border-dashed border-gray-400 dark:border-gray-600 bg-white dark:bg-gray-800 p-16 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
                         onDrop={handleDrop}
@@ -149,7 +149,7 @@ const Convert: React.FC = () => {
                 </div>
             ) : (
                 /* Preview + Options */
-                <div className="max-w-7xl mx-auto p-8 flex gap-8">
+                <div className="max-w-[1800px] mx-auto p-8 flex gap-8">
                     {/* Left: Image Preview Grid */}
                     <div className="flex-1">
                         <div className="bg-white dark:bg-gray-800 border-4 border-black dark:border-gray-400 p-6 shadow-retro dark:shadow-retro-dark mb-4">
@@ -176,8 +176,8 @@ const Convert: React.FC = () => {
                                     >
                                         ×
                                     </button>
-                                    <img src={img.preview} alt={img.file.name} className="w-full h-32 object-cover" />
-                                    <div className="mt-2 text-xs font-body">
+                                    <img src={img.preview} alt={img.file.name} className="w-full h-48 object-cover" />
+                                    <div className="mt-2 text-sm font-body">
                                         <p className="truncate font-bold">{img.file.name}</p>
                                         {conversionMode === 'individual' && (
                                             <select
@@ -205,14 +205,14 @@ const Convert: React.FC = () => {
                     </div>
 
                     {/* Right: Convert Options */}
-                    <div className="lg:w-96">
+                    <div className="lg:w-[480px]">
                         <div className="bg-white dark:bg-gray-800 border-4 border-black dark:border-gray-400 p-6 shadow-retro dark:shadow-retro-dark sticky top-4">
-                            <h3 className="text-xl font-display mb-6">Convert options</h3>
+                            <h3 className="text-2xl font-display mb-6">Convert options</h3>
 
                             {/* Mode Toggle (only show if multiple images) */}
                             {images.length > 1 && (
                                 <div className="mb-6">
-                                    <label className="block text-sm font-body mb-3">Conversion Mode:</label>
+                                    <label className="block text-base font-body mb-3">Conversion Mode:</label>
                                     <div className="grid grid-cols-2 gap-3">
                                         <button
                                             className={`p-3 border-4 transition-all ${conversionMode === 'batch'
@@ -221,7 +221,7 @@ const Convert: React.FC = () => {
                                                 }`}
                                             onClick={() => setConversionMode('batch')}
                                         >
-                                            <p className="text-xs font-body">All Same</p>
+                                            <p className="text-sm font-body">All Same</p>
                                             {conversionMode === 'batch' && <span className="text-green-500 text-xl">✓</span>}
                                         </button>
                                         <button
@@ -231,7 +231,7 @@ const Convert: React.FC = () => {
                                                 }`}
                                             onClick={() => setConversionMode('individual')}
                                         >
-                                            <p className="text-xs font-body">Each Different</p>
+                                            <p className="text-sm font-body">Each Different</p>
                                             {conversionMode === 'individual' && <span className="text-green-500 text-xl">✓</span>}
                                         </button>
                                     </div>
@@ -241,12 +241,12 @@ const Convert: React.FC = () => {
                             {/* Format Selection (only show in batch mode or single image) */}
                             {(conversionMode === 'batch' || images.length === 1) && (
                                 <div className="mb-6">
-                                    <label className="block text-sm font-body mb-3">Output Format:</label>
+                                    <label className="block text-base font-body mb-3">Output Format:</label>
                                     <div className="space-y-2">
                                         {(['png', 'jpg', 'webp'] as const).map((fmt) => (
                                             <button
                                                 key={fmt}
-                                                className={`w-full p-3 border-4 text-left font-body transition-all ${batchFormat === fmt
+                                                className={`w-full p-3 border-4 text-left font-body text-base transition-all ${batchFormat === fmt
                                                     ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
                                                     : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
                                                     }`}
@@ -268,13 +268,13 @@ const Convert: React.FC = () => {
                                         onChange={(e) => setPodMode(e.target.checked)}
                                         className="w-5 h-5"
                                     />
-                                    <span className="text-sm font-body">POD Mode (300 DPI)</span>
+                                    <span className="text-base font-body">POD Mode (300 DPI)</span>
                                 </label>
                             </div>
 
                             {/* Convert Button */}
                             <button
-                                className="w-full px-6 py-4 bg-blue-500 border-4 border-black text-white font-display text-sm hover:bg-blue-600 transition-all shadow-retro active:shadow-retro-active active:translate-y-1 flex items-center justify-center gap-2"
+                                className="w-full px-6 py-4 bg-blue-500 border-4 border-black text-white font-display text-base hover:bg-blue-600 transition-all shadow-retro active:shadow-retro-active active:translate-y-1 flex items-center justify-center gap-2"
                                 onClick={handleConvert}
                             >
                                 Convert IMAGES

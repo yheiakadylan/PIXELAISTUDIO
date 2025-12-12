@@ -174,8 +174,8 @@ const Resize: React.FC = () => {
 
             {/* Main Content */}
             {images.length === 0 ? (
-                // Upload Screen
-                <div className="max-w-4xl mx-auto px-4 py-20">
+                /* Upload Screen */
+                <div className="max-w-[1200px] mx-auto p-8">
                     <div className="text-center mb-8">
                         <h2 className="text-3xl font-display mb-4">Resize IMAGE</h2>
                         <p className="text-xl font-body text-gray-700 dark:text-gray-300">
@@ -207,8 +207,8 @@ const Resize: React.FC = () => {
                     </div>
                 </div>
             ) : (
-                // Resize Screen
-                <div className="max-w-7xl mx-auto px-4 py-8 flex gap-6 flex-col lg:flex-row">
+                /* Preview + Options */
+                <div className="max-w-[1800px] mx-auto p-8 flex gap-8 flex-col lg:flex-row">
                     {/* Left: Image Preview */}
                     <div className="flex-1">
                         <div className="mb-4">
@@ -236,10 +236,10 @@ const Resize: React.FC = () => {
                                         >
                                             ×
                                         </button>
-                                        <img src={img.preview} alt={img.file.name} className="w-full h-32 object-cover" />
-                                        <div className="mt-2 text-xs font-body">
+                                        <img src={img.preview} alt={img.file.name} className="w-full h-48 object-cover" />
+                                        <div className="mt-2 text-sm font-body">
                                             <p className="truncate font-bold">{img.file.name}</p>
-                                            <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400 mt-1">
+                                            <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400 mt-1 text-xs">
                                                 <span className="px-1 bg-gray-200 dark:bg-gray-700 border border-gray-400">
                                                     {img.originalWidth} x {img.originalHeight}
                                                 </span>
@@ -256,9 +256,9 @@ const Resize: React.FC = () => {
                     </div>
 
                     {/* Right: Resize Options */}
-                    <div className="lg:w-96">
+                    <div className="lg:w-[480px]">
                         <div className="bg-white dark:bg-gray-800 border-4 border-black dark:border-gray-400 p-6 shadow-retro dark:shadow-retro-dark sticky top-4 min-h-[803px] flex flex-col">
-                            <h3 className="text-xl font-display mb-6">Resize options</h3>
+                            <h3 className="text-2xl font-display mb-6">Resize options</h3>
 
                             {/* Top section - will grow to push bottom content down */}
                             <div className="flex-grow">
@@ -290,11 +290,11 @@ const Resize: React.FC = () => {
 
                                 {resizeMode === 'pixels' ? (
                                     <>
-                                        <p className="text-sm font-body mb-4">Resize all images to a <strong>exact size</strong> of</p>
+                                        <p className="text-base font-body mb-4">Resize all images to a <strong>exact size</strong> of</p>
 
                                         <div className="space-y-4 mb-6">
                                             <div>
-                                                <label className="block text-sm font-body mb-2">Width (px):</label>
+                                                <label className="block text-base font-body mb-2">Width (px):</label>
                                                 <input
                                                     type="number"
                                                     value={width}
@@ -303,7 +303,7 @@ const Resize: React.FC = () => {
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-body mb-2">Height (px):</label>
+                                                <label className="block text-base font-body mb-2">Height (px):</label>
                                                 <input
                                                     type="number"
                                                     value={height}
@@ -315,12 +315,12 @@ const Resize: React.FC = () => {
                                     </>
                                 ) : (
                                     <>
-                                        <p className="text-sm font-body mb-4">Reduce images to <strong>percentage</strong> of original size:</p>
+                                        <p className="text-base font-body mb-4">Reduce images to <strong>percentage</strong> of original size:</p>
                                         <div className="space-y-2 mb-6">
                                             {[25, 50, 75].map((pct) => (
                                                 <button
                                                     key={pct}
-                                                    className={`w-full p-3 border-4 text-left font-body transition-all ${percentage === pct
+                                                    className={`w-full p-3 border-4 text-left font-body text-base transition-all ${percentage === pct
                                                         ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
                                                         : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
                                                         }`}
@@ -330,7 +330,7 @@ const Resize: React.FC = () => {
                                                 </button>
                                             ))}
                                             <button
-                                                className={`w-full p-3 border-4 text-left font-body transition-all ${percentage === 0
+                                                className={`w-full p-3 border-4 text-left font-body text-base transition-all ${percentage === 0
                                                     ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
                                                     : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
                                                     }`}
@@ -369,7 +369,7 @@ const Resize: React.FC = () => {
                                                 onChange={(e) => setMaintainAspectRatio(e.target.checked)}
                                                 className="w-5 h-5"
                                             />
-                                            <span className="text-sm font-body">Maintain aspect ratio</span>
+                                            <span className="text-base font-body">Maintain aspect ratio</span>
                                         </label>
                                         <label className="flex items-center gap-3 cursor-pointer">
                                             <input
@@ -378,7 +378,7 @@ const Resize: React.FC = () => {
                                                 onChange={(e) => setDoNotEnlarge(e.target.checked)}
                                                 className="w-5 h-5"
                                             />
-                                            <span className="text-sm font-body">Do not enlarge if smaller</span>
+                                            <span className="text-base font-body">Do not enlarge if smaller</span>
                                         </label>
                                     </div>
                                 )}
@@ -390,7 +390,7 @@ const Resize: React.FC = () => {
                                 {/* Output Settings */}
                                 <div className="space-y-3 mb-6 border-t-2 border-gray-300 pt-4">
                                     <div>
-                                        <label className="block text-sm font-body mb-2">Format:</label>
+                                        <label className="block text-base font-body mb-2">Format:</label>
                                         <select
                                             value={format}
                                             onChange={(e) => setFormat(e.target.value as 'png' | 'jpg' | 'webp')}
@@ -408,13 +408,13 @@ const Resize: React.FC = () => {
                                             onChange={(e) => setPodMode(e.target.checked)}
                                             className="w-5 h-5"
                                         />
-                                        <span className="text-sm font-body">POD Mode (300 DPI)</span>
+                                        <span className="text-base font-body">POD Mode (300 DPI)</span>
                                     </label>
                                 </div>
 
                                 {/* Resize Button */}
                                 <button
-                                    className="w-full px-6 py-4 bg-blue-500 border-4 border-black text-white font-display text-sm hover:bg-blue-600 transition-all shadow-retro active:shadow-retro-active active:translate-y-1 flex items-center justify-center gap-2"
+                                    className="w-full px-6 py-4 bg-blue-500 border-4 border-black text-white font-display text-base hover:bg-blue-600 transition-all shadow-retro active:shadow-retro-active active:translate-y-1 flex items-center justify-center gap-2"
                                     onClick={handleResize}
                                 >
                                     Resize IMAGES
