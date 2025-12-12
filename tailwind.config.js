@@ -4,29 +4,42 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        nes: {
-          dark: '#212529',
-          blue: '#209cee',
-          green: '#92cc41',
-          yellow: '#f7d51d',
-          red: '#e76e55',
-          white: '#fff',
-          gray: '#cccccc',
-        },
+        primary: "#3b82f6",
+        "retro-bg": "#d4d4d4",
+        "retro-bg-dark": "#121212",
+        "retro-card": "#ffffff",
+        "retro-card-dark": "#2a2a2a",
       },
       fontFamily: {
-        pixel: ['"Press Start 2P"', 'cursive'],
+        display: ['"Press Start 2P"', 'cursive'],
+        body: ['"VT323"', 'monospace'],
       },
-      cursor: {
-        pixel: 'url("/cursor-hand.png"), auto',
+      borderRadius: {
+        DEFAULT: "0px",
+        none: "0px",
+        sm: "0px",
+        md: "0px",
+        lg: "0px",
+        full: "0px",
       },
+      boxShadow: {
+        'retro': '6px 6px 0px 0px rgba(0,0,0,1)',
+        'retro-hover': '8px 8px 0px 0px rgba(0,0,0,1)',
+        'retro-active': '2px 2px 0px 0px rgba(0,0,0,1)',
+        'retro-dark': '6px 6px 0px 0px rgba(255,255,255,0.2)',
+      },
+      borderWidth: {
+        '3': '3px',
+        '4': '4px',
+      },
+      animation: {
+        'pulse': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+      }
     },
   },
   plugins: [],
-  corePlugins: {
-    borderRadius: false, // Disable all border-radius utilities
-  },
 }
