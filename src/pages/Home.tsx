@@ -198,11 +198,11 @@ const Home: React.FC = () => {
             <footer className="border-t-4 border-black dark:border-gray-500 bg-white dark:bg-gray-900 py-10">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
                     <p className="text-lg text-gray-500 dark:text-gray-400 font-body">
-                        © 2024 Pixel AI Studio. Crafted with <span className="text-red-500 font-bold animate-pulse">&lt;3</span> by Pixel Artists.
+                        © 2026 Pixel AI Studio. Crafted with <span className="text-red-500 font-bold animate-pulse">&lt;3</span> by HaiTrinh.
                     </p>
                     <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 font-display opacity-80">
                         <span className="material-symbols-outlined text-base">memory</span>
-                        WASM Powered
+                        HaiTrinh
                     </div>
                 </div>
             </footer>
