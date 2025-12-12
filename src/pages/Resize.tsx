@@ -1,6 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useFileSystem } from '../hooks/useFileSystem';
 import { useDPIInjector } from '../hooks/useDPIInjector';
 import { imageToCanvas, resizeCanvas, canvasToBlob, getExtensionFromMimeType } from '../utils/canvasHelpers';
 
@@ -26,7 +25,6 @@ const Resize: React.FC = () => {
     const [format, setFormat] = useState<'png' | 'jpg' | 'webp'>('png');
     const [podMode, setPodMode] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const { saveToFolder } = useFileSystem();
     const { injectDPI } = useDPIInjector();
 
     const handleWidthChange = (newWidth: number) => {
@@ -105,8 +103,6 @@ const Resize: React.FC = () => {
     const handleResize = async () => {
         if (images.length === 0) return;
 
-        const filesToSave: { blob: Blob; filename: string }[] = [];
-
         for (const img of images) {
             const { targetWidth, targetHeight } = calculateTargetDimensions(img);
 
@@ -122,10 +118,21 @@ const Resize: React.FC = () => {
             const baseFilename = img.file.name.replace(/\.[^/.]+$/, '');
             const filename = `${baseFilename}_resized.${extension}`;
 
-            filesToSave.push({ blob, filename });
-        }
+            // Download directly to browser's Downloads folder
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
 
-        await saveToFolder(filesToSave);
+            // Small delay between downloads to avoid browser blocking
+            if (images.length > 1) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+        }
     };
 
     const handleDrop = useCallback((e: React.DragEvent) => {
