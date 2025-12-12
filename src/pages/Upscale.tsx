@@ -53,15 +53,31 @@ const Upscale: React.FC = () => {
                 // Load original image
                 const originalCanvas = await imageToCanvas(file);
 
-                // Upscale using AI
-                const upscaledCanvas = await upscaler.upscale(originalCanvas, {
+                // Upscale using AI - returns base64 string
+                const upscaledDataURL = await upscaler.upscale(originalCanvas, {
                     patchSize: 64,
                     padding: 2,
                     progress: (progress: number) => {
                         const overallProgress = ((i + progress) / files.length) * 100;
                         setProcessingProgress(Math.round(overallProgress));
                     },
-                }) as HTMLCanvasElement;
+                }) as string;
+
+                // Convert base64 to canvas
+                const upscaledImg = new Image();
+                await new Promise((resolve, reject) => {
+                    upscaledImg.onload = resolve;
+                    upscaledImg.onerror = reject;
+                    upscaledImg.src = upscaledDataURL;
+                });
+
+                const upscaledCanvas = document.createElement('canvas');
+                upscaledCanvas.width = upscaledImg.width;
+                upscaledCanvas.height = upscaledImg.height;
+                const upscaledCtx = upscaledCanvas.getContext('2d');
+                if (upscaledCtx) {
+                    upscaledCtx.drawImage(upscaledImg, 0, 0);
+                }
 
                 // Scale to target factor
                 const targetWidth = originalCanvas.width * scaleFactor;
