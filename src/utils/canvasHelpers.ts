@@ -21,14 +21,74 @@ export const imageToCanvas = (file: File): Promise<HTMLCanvasElement> => {
             canvas.width = img.width;
             canvas.height = img.height;
             ctx.drawImage(img, 0, 0);
+            URL.revokeObjectURL(img.src); // Clean up
             resolve(canvas);
         };
 
         img.onerror = () => {
+            URL.revokeObjectURL(img.src);
             reject(new Error('Failed to load image'));
         };
 
         img.src = URL.createObjectURL(file);
+    });
+};
+
+/**
+ * Create a thumbnail preview (200px max width/height)
+ * Memory optimization: 20MB RAM for 100 images vs 2GB for full-size
+ * 
+ * @param file - Image file
+ * @param maxSize - Maximum width/height (default: 200px)
+ * @returns Data URL of thumbnail
+ */
+export const createThumbnail = (file: File, maxSize: number = 200): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+
+        img.onload = () => {
+            // Calculate thumbnail dimensions
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+                if (width > maxSize) {
+                    height = (height * maxSize) / width;
+                    width = maxSize;
+                }
+            } else {
+                if (height > maxSize) {
+                    width = (width * maxSize) / height;
+                    height = maxSize;
+                }
+            }
+
+            // Create thumbnail canvas
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                URL.revokeObjectURL(url);
+                reject(new Error('Failed to get 2D context'));
+                return;
+            }
+
+            ctx.drawImage(img, 0, 0, width, height);
+            URL.revokeObjectURL(url); // Clean up immediately
+
+            // Convert to data URL (JPEG 80% for smaller size)
+            resolve(canvas.toDataURL('image/jpeg', 0.8));
+        };
+
+        img.onerror = () => {
+            URL.revokeObjectURL(url);
+            reject(new Error('Failed to load image'));
+        };
+
+        img.src = url;
     });
 };
 

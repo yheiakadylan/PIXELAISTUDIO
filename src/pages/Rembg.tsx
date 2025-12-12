@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDPIInjector } from '../hooks/useDPIInjector';
-import { imageToCanvas, canvasToBlob, getExtensionFromMimeType } from '../utils/canvasHelpers';
+import { imageToCanvas, canvasToBlob, getExtensionFromMimeType, createThumbnail } from '../utils/canvasHelpers';
 import { removeBackground } from '@imgly/background-removal';
 
 interface ProcessedImage {
@@ -44,12 +44,12 @@ const RemBg: React.FC = () => {
         for (const file of Array.from(files)) {
             try {
                 const canvas = await imageToCanvas(file);
-                const preview = canvas.toDataURL();
+                const original = canvas.toDataURL(); // Full size for slider alignment
 
                 newImages.push({
                     id: `${file.name}-${Date.now()}`,
                     file,
-                    original: preview,
+                    original,
                     status: 'processing',
                     progress: 0,
                     canvas

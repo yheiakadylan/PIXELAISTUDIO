@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDPIInjector } from '../hooks/useDPIInjector';
-import { imageToCanvas, resizeCanvas, canvasToBlob, getExtensionFromMimeType } from '../utils/canvasHelpers';
+import { imageToCanvas, resizeCanvas, canvasToBlob, getExtensionFromMimeType, createThumbnail } from '../utils/canvasHelpers';
 
 interface UploadedImage {
     id: string;
@@ -61,7 +61,7 @@ const Resize: React.FC = () => {
             const file = files[i];
             try {
                 const canvas = await imageToCanvas(file);
-                const preview = canvas.toDataURL();
+                const preview = await createThumbnail(file, 200);
 
                 newImages.push({
                     id: `${file.name}-${Date.now()}-${i}`,
