@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import Convert from './pages/Convert';
+import Resize from './pages/Resize';
 import './index.css';
 
 function App() {
@@ -10,6 +11,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/convert" element={<Convert />} />
+        <Route path="/resize" element={<Resize />} />
         {/* Additional routes will be added in future sprints */}
       </Routes>
     </Router>

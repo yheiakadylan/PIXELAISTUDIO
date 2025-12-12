@@ -12,7 +12,7 @@ const Home: React.FC = () => {
             color: 'is-primary',
             icon: '🎨',
             path: '/resize',
-            comingSoon: true,
+            comingSoon: false,
         },
         {
             title: 'FORMAT CONVERT',
