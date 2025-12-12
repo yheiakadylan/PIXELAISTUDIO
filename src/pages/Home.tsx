@@ -7,6 +7,8 @@ import CursorTrail from '../components/CursorTrail';
 import AchievementPopup, { useAchievements } from '../components/AchievementPopup';
 import MinecraftSword from '../components/MinecraftSword';
 import Typewriter from '../components/Typewriter';
+import StatsCounter from '../components/StatsCounter';
+import { soundEffects } from '../utils/soundEffects';
 
 const Home: React.FC = () => {
     const navigate = useNavigate();
@@ -16,6 +18,7 @@ const Home: React.FC = () => {
     const [sKeyPresses, setSKeyPresses] = useState(0);
     const [superMode, setSuperMode] = useState(false);
     const [showTitle, setShowTitle] = useState(false);
+    const [soundEnabled, setSoundEnabled] = useState(true);
     const { currentAchievement, unlockAchievement, clearCurrentAchievement } = useAchievements();
 
     useEffect(() => {
@@ -133,8 +136,10 @@ const Home: React.FC = () => {
                                 onClick={() => {
                                     const newClicks = logoClicks + 1;
                                     setLogoClicks(newClicks);
+                                    soundEffects.click();
                                     if (newClicks === 10) {
                                         unlockAchievement('logo_lover');
+                                        soundEffects.success();
                                         setLogoClicks(0);
                                     }
                                 }}
@@ -148,6 +153,19 @@ const Home: React.FC = () => {
                         <div className="flex items-center gap-4 animate-slideInRight">
                             <button
                                 className="p-2 border-2 border-transparent hover:border-black dark:hover:border-white hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200 active:scale-95"
+                                onClick={() => {
+                                    soundEffects.toggle();
+                                    setSoundEnabled(!soundEnabled);
+                                    soundEffects.click();
+                                }}
+                                title="Toggle Sound"
+                            >
+                                <span className="material-symbols-outlined">
+                                    {soundEnabled ? 'volume_up' : 'volume_off'}
+                                </span>
+                            </button>
+                            <button
+                                className="p-2 border-2 border-transparent hover:border-black dark:hover:border-white hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200 active:scale-95"
                                 onClick={toggleDarkMode}
                             >
                                 {darkMode ? (
@@ -158,7 +176,10 @@ const Home: React.FC = () => {
                             </button>
                             <button
                                 className="hidden sm:inline-flex items-center justify-center px-6 py-3 border-4 border-black dark:border-white text-xs font-display text-white bg-green-600 hover:bg-green-500 shadow-retro btn-lift transition-all duration-200"
-                                onClick={() => setShowCraftModal(true)}
+                                onClick={() => {
+                                    setShowCraftModal(true);
+                                    soundEffects.click();
+                                }}
                             >
                                 Start Crafting
                             </button>
@@ -193,6 +214,9 @@ const Home: React.FC = () => {
                         Enhance, resize, and transform your assets directly in your browser. No uploads, full privacy, and blazing fast performance.
                     </p>
                 </div>
+
+                {/* Stats Counter */}
+                <StatsCounter className="max-w-2xl w-full mx-auto mb-12 animate-scaleIn" />
 
                 {/* Tools Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl w-full">
