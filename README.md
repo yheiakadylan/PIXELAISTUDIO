@@ -1,73 +1,129 @@
-# React + TypeScript + Vite
+# 🕹️ PIXEL AI STUDIO
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Client-side AI Image Tool for POD & Creators**
 
-Currently, two official plugins are available:
+A retro pixel art styled Progressive Web App (PWA) for processing images with AI - completely offline and secure.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![React](https://img.shields.io/badge/React-19.2.0-61DAFB?logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-3178C6?logo=typescript)
+![Vite](https://img.shields.io/badge/Vite-7.2.4-646CFF?logo=vite)
 
-## React Compiler
+## ✨ Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- 🔒 **100% Client-Side** - Your images never leave your device
+- 📴 **Works Offline** - Install as PWA, use without internet
+- 🎯 **POD Ready** - Export at 300 DPI for print quality
+- 🎨 **Retro Pixel Art** - Beautiful 8-bit NES aesthetic
+- ⚡ **AI Powered** - Background removal & upscaling on your device
 
-## Expanding the ESLint configuration
+## 🛠️ Tech Stack
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **Core**: React + Vite + TypeScript
+- **Styling**: Tailwind CSS + NES.css (8-bit styles)
+- **Icons**: Pixel art icons
+- **AI Processing**: 
+  - `@imgly/background-removal` - Client-side background removal
+  - `upscalerjs` + TensorFlow.js - AI image upscaling
+- **Storage**: File System Access API
+- **PWA**: vite-plugin-pwa
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 🚀 Getting Started
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Prerequisites
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- Node.js 18+ 
+- npm or yarn
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/YOUR_USERNAME/PIXELAISTUDIO.git
+cd PIXELAISTUDIO
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Navigate to `http://localhost:5173`
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Build for Production
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run build
+npm run preview
 ```
+
+## 🎮 Tools
+
+### 1. 🎨 Resize & Preset
+Scale images for POD platforms with quick presets:
+- Merch by Amazon: 4500x5400
+- Etsy Listing: 2000x2000
+- Mug 11oz: 2000x800
+
+### 2. 🔄 Format Convert
+Convert between PNG/JPG/WEBP formats with quality control
+
+### 3. ✂️ Remove BG
+AI-powered background removal running entirely in your browser
+
+### 4. ⚡ Upscale 4K
+Enhance images to 4K quality using AI upscaling
+
+## 📁 Project Structure
+
+```
+PIXELAISTUDIO/
+├── public/               # Static assets
+├── src/
+│   ├── assets/          # Icons, sounds, fonts
+│   ├── components/
+│   │   ├── core/       # Reusable UI components
+│   │   ├── layout/     # Layout components
+│   │   └── shared/     # Shared components
+│   ├── hooks/          # Custom React hooks
+│   ├── pages/          # Page components
+│   ├── utils/          # Helper functions
+│   └── App.tsx         # Main app component
+└── package.json
+```
+
+## 🎨 Design Philosophy
+
+- **No rounded corners** - Everything is pixel-perfect
+- **Hard shadows only** - No blur effects
+- **NES color palette** - Primary, Success, Warning, Error
+- **Press Start 2P font** - Authentic retro feel
+- **Pixel art icons** - Custom 8-bit graphics
+
+## 🔧 Development
+
+### Sprint Progress
+
+- ✅ **Sprint 1**: Foundation & Theme
+- 🔄 **Sprint 2**: Core Engine & File System (Coming Soon)
+- 📋 **Sprint 3**: Resize & Convert (Coming Soon)
+- 📋 **Sprint 4**: AI Background Removal (Coming Soon)
+- 📋 **Sprint 5**: AI Upscale 4K (Coming Soon)
+- 📋 **Sprint 6**: PWA & Offline (Coming Soon)
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📝 License
+
+This project is licensed under the MIT License.
+
+## 💚 Made with Love
+
+Created by Pixel Artists • Powered by WebAssembly & AI
+
+---
+
+**Note**: This is a client-side application. All processing happens on your device for maximum privacy and security.
