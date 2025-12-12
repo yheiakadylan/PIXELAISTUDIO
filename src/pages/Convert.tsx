@@ -8,14 +8,14 @@ interface UploadedImage {
     file: File;
     preview: string;
     canvas: HTMLCanvasElement;
-    targetFormat?: 'png' | 'jpg' | 'webp';
+    targetFormat?: 'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'gif' | 'ico';
 }
 
 const Convert: React.FC = () => {
     const navigate = useNavigate();
     const [images, setImages] = useState<UploadedImage[]>([]);
     const [conversionMode, setConversionMode] = useState<'batch' | 'individual'>('batch');
-    const [batchFormat, setBatchFormat] = useState<'png' | 'jpg' | 'webp'>('png');
+    const [batchFormat, setBatchFormat] = useState<'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'gif' | 'ico'>('png');
     const [podMode, setPodMode] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { injectDPI } = useDPIInjector();
@@ -50,7 +50,7 @@ const Convert: React.FC = () => {
         setImages((prev) => prev.filter((img) => img.id !== id));
     };
 
-    const handleImageFormatChange = (id: string, format: 'png' | 'jpg' | 'webp') => {
+    const handleImageFormatChange = (id: string, format: 'png' | 'jpg' | 'webp' | 'avif' | 'bmp' | 'gif' | 'ico') => {
         setImages(prev => prev.map(img =>
             img.id === id ? { ...img, targetFormat: format } : img
         ));
@@ -102,17 +102,17 @@ const Convert: React.FC = () => {
         <div className="min-h-screen bg-retro-bg dark:bg-retro-bg-dark transition-colors">
             {/* Header */}
             <div className="border-b-4 border-black dark:border-gray-400 bg-white dark:bg-gray-800 p-4">
-                <div className="max-w-7xl mx-auto flex items-center gap-4">
+                <div className="max-w-7xl mx-auto flex items-center justify-center gap-4">
                     <button
-                        className="px-4 py-2 bg-gray-200 dark:bg-gray-700 border-4 border-black dark:border-gray-400 font-display text-sm hover:bg-gray-300 dark:hover:bg-gray-600 transition-all shadow-retro active:shadow-retro-active active:translate-y-1"
+                        className="px-4 py-2 bg-gray-200 dark:bg-gray-700 border-4 border-black dark:border-gray-400 font-display text-sm hover:bg-gray-300 dark:hover:bg-gray-600 transition-all shadow-retro active:shadow-retro-active active:translate-y-1 absolute left-4"
                         onClick={() => navigate('/')}
                     >
                         ← Back
                     </button>
-                    <div>
+                    <div className="text-center">
                         <h1 className="text-2xl font-display">🔄 FORMAT CONVERT</h1>
                         <p className="text-sm font-body text-gray-600 dark:text-gray-400">
-                            Convert between PNG/JPG/WEBP formats
+                            Convert between PNG, JPG, WEBP, AVIF, BMP, GIF, ICO
                         </p>
                     </div>
                 </div>
@@ -120,9 +120,16 @@ const Convert: React.FC = () => {
 
             {images.length === 0 ? (
                 /* Upload Screen */
-                <div className="max-w-[1200px] mx-auto p-8">
+                <div className="max-w-[1200px] mx-auto px-4 py-20">
+                    <div className="text-center mb-8">
+                        <h2 className="text-3xl font-display mb-4">Convert IMAGE</h2>
+                        <p className="text-xl font-body text-gray-700 dark:text-gray-300">
+                            Convert between <span className="text-blue-600">PNG</span>, <span className="text-green-600">JPG</span>, <span className="text-purple-600">WEBP</span>, <span className="text-red-600">AVIF</span>, <span className="text-orange-600">BMP</span>, <span className="text-pink-600">GIF</span>, <span className="text-indigo-600">ICO</span>
+                        </p>
+                    </div>
+
                     <div
-                        className="border-4 border-dashed border-gray-400 dark:border-gray-600 bg-white dark:bg-gray-800 p-16 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
+                        className="border-4 border-dashed border-gray-400 dark:border-gray-600 bg-white dark:bg-gray-800 p-16 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all shadow-retro"
                         onDrop={handleDrop}
                         onDragOver={handleDragOver}
                         onClick={() => fileInputRef.current?.click()}
@@ -130,13 +137,13 @@ const Convert: React.FC = () => {
                         <span className="material-symbols-outlined text-6xl mb-4 text-gray-400">
                             upload_file
                         </span>
-                        <h2 className="text-2xl font-display mb-2">Upload Images</h2>
-                        <p className="font-body text-gray-600 dark:text-gray-400 mb-4">
-                            Click or drag images here
+                        <h3 className="text-2xl font-display mb-2">Click or Drag Images Here</h3>
+                        <p className="font-body text-gray-600 dark:text-gray-400 mb-4 text-lg">
+                            Select single or multiple images
                         </p>
-                        <p className="text-sm font-body text-gray-500">
-                            Supports: PNG, JPG, WEBP
-                        </p>
+                        <div className="inline-block px-6 py-3 bg-blue-500 border-4 border-black text-white font-display text-sm shadow-retro">
+                            SELECT IMAGES
+                        </div>
                     </div>
                     <input
                         ref={fileInputRef}
@@ -182,12 +189,16 @@ const Convert: React.FC = () => {
                                         {conversionMode === 'individual' && (
                                             <select
                                                 value={img.targetFormat || 'png'}
-                                                onChange={(e) => handleImageFormatChange(img.id, e.target.value as 'png' | 'jpg' | 'webp')}
+                                                onChange={(e) => handleImageFormatChange(img.id, e.target.value as any)}
                                                 className="w-full mt-2 p-1 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 font-body text-xs"
                                             >
                                                 <option value="png">→ PNG</option>
                                                 <option value="jpg">→ JPG</option>
                                                 <option value="webp">→ WEBP</option>
+                                                <option value="avif">→ AVIF</option>
+                                                <option value="bmp">→ BMP</option>
+                                                <option value="gif">→ GIF</option>
+                                                <option value="ico">→ ICO</option>
                                             </select>
                                         )}
                                     </div>
@@ -243,18 +254,69 @@ const Convert: React.FC = () => {
                                 <div className="mb-6">
                                     <label className="block text-base font-body mb-3">Output Format:</label>
                                     <div className="space-y-2">
-                                        {(['png', 'jpg', 'webp'] as const).map((fmt) => (
-                                            <button
-                                                key={fmt}
-                                                className={`w-full p-3 border-4 text-left font-body text-base transition-all ${batchFormat === fmt
-                                                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                                                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
-                                                    }`}
-                                                onClick={() => setBatchFormat(fmt)}
-                                            >
-                                                {fmt.toUpperCase()} {batchFormat === fmt && <span className="float-right text-green-500">✓</span>}
-                                            </button>
-                                        ))}
+                                        <button
+                                            className={`w-full p-3 border-4 text-left font-body text-base transition-all ${batchFormat === 'png'
+                                                ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                                                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                                                }`}
+                                            onClick={() => setBatchFormat('png')}
+                                        >
+                                            PNG (Lossless) {batchFormat === 'png' && <span className="float-right text-green-500">✓</span>}
+                                        </button>
+                                        <button
+                                            className={`w-full p-3 border-4 text-left font-body text-base transition-all ${batchFormat === 'jpg'
+                                                ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                                                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                                                }`}
+                                            onClick={() => setBatchFormat('jpg')}
+                                        >
+                                            JPG (Compressed) {batchFormat === 'jpg' && <span className="float-right text-green-500">✓</span>}
+                                        </button>
+                                        <button
+                                            className={`w-full p-3 border-4 text-left font-body text-base transition-all ${batchFormat === 'webp'
+                                                ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                                                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                                                }`}
+                                            onClick={() => setBatchFormat('webp')}
+                                        >
+                                            WEBP (Modern) {batchFormat === 'webp' && <span className="float-right text-green-500">✓</span>}
+                                        </button>
+                                        <button
+                                            className={`w-full p-3 border-4 text-left font-body text-base transition-all ${batchFormat === 'avif'
+                                                ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                                                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                                                }`}
+                                            onClick={() => setBatchFormat('avif')}
+                                        >
+                                            AVIF (Next-gen) {batchFormat === 'avif' && <span className="float-right text-green-500">✓</span>}
+                                        </button>
+                                        <button
+                                            className={`w-full p-3 border-4 text-left font-body text-base transition-all ${batchFormat === 'bmp'
+                                                ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                                                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                                                }`}
+                                            onClick={() => setBatchFormat('bmp')}
+                                        >
+                                            BMP (Uncompressed) {batchFormat === 'bmp' && <span className="float-right text-green-500">✓</span>}
+                                        </button>
+                                        <button
+                                            className={`w-full p-3 border-4 text-left font-body text-base transition-all ${batchFormat === 'gif'
+                                                ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                                                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                                                }`}
+                                            onClick={() => setBatchFormat('gif')}
+                                        >
+                                            GIF (Animated) {batchFormat === 'gif' && <span className="float-right text-green-500">✓</span>}
+                                        </button>
+                                        <button
+                                            className={`w-full p-3 border-4 text-left font-body text-base transition-all ${batchFormat === 'ico'
+                                                ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                                                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                                                }`}
+                                            onClick={() => setBatchFormat('ico')}
+                                        >
+                                            ICO (Favicon) {batchFormat === 'ico' && <span className="float-right text-green-500">✓</span>}
+                                        </button>
                                     </div>
                                 </div>
                             )}

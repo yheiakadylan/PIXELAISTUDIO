@@ -150,19 +150,22 @@ const Resize: React.FC = () => {
             <div className="fixed inset-0 -z-10 bg-[linear-gradient(45deg,#c4c4c4_25%,transparent_25%,transparent_75%,#c4c4c4_75%,#c4c4c4),linear-gradient(45deg,#c4c4c4_25%,transparent_25%,transparent_75%,#c4c4c4_75%,#c4c4c4)] bg-[length:20px_20px] bg-[position:0_0,10px_10px] dark:bg-[linear-gradient(45deg,#222_25%,transparent_25%,transparent_75%,#222_75%,#222),linear-gradient(45deg,#222_25%,transparent_25%,transparent_75%,#222_75%,#222)]" />
 
             {/* Header */}
-            <div className="bg-white dark:bg-gray-800 border-b-4 border-black dark:border-gray-500 p-4">
-                <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="border-b-4 border-black dark:border-gray-400 bg-white dark:bg-gray-800 p-4">
+                <div className="max-w-7xl mx-auto flex items-center justify-center gap-4">
                     <button
-                        className="px-4 py-2 border-4 border-black dark:border-white bg-gray-200 dark:bg-gray-700 hover:translate-y-1 active:translate-y-2 transition-all shadow-retro active:shadow-retro-active font-display text-xs"
+                        className="px-4 py-2 bg-gray-200 dark:bg-gray-700 border-4 border-black dark:border-gray-400 font-display text-sm hover:bg-gray-300 dark:hover:bg-gray-600 transition-all shadow-retro active:shadow-retro-active active:translate-y-1 absolute left-4"
                         onClick={() => navigate('/')}
                     >
                         ← Back
                     </button>
-                    <h1 className="text-xl md:text-2xl font-display">Resize IMAGE</h1>
-                    <div className="w-20"></div>
+                    <div className="text-center">
+                        <h1 className="text-2xl font-display">📐 IMAGE RESIZE</h1>
+                        <p className="text-sm font-body text-gray-600 dark:text-gray-400">
+                            Resize images to exact dimensions or percentage
+                        </p>
+                    </div>
                 </div>
             </div>
-
             <input
                 ref={fileInputRef}
                 type="file"
