@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useDPIInjector } from '../hooks/useDPIInjector';
 import { imageToCanvas, getExtensionFromMimeType, createThumbnail } from '../utils/canvasHelpers';
 import { canvasToBlobEnhanced, getMimeTypeFromFormat } from '../utils/formatConverters';
@@ -14,12 +14,28 @@ interface UploadedImage {
 
 const Convert: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [images, setImages] = useState<UploadedImage[]>([]);
     const [conversionMode, setConversionMode] = useState<'batch' | 'individual'>('batch');
     const [batchFormat, setBatchFormat] = useState<'png' | 'jpg' | 'webp' | 'avif'>('png');
     const [podMode, setPodMode] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const hasAutoLoaded = useRef(false);
     const { injectDPI } = useDPIInjector();
+
+    // Auto-load files from navigation state (Craft Modal)
+    useEffect(() => {
+        if (hasAutoLoaded.current) return;
+
+        const autoLoadFiles = location.state?.autoLoadFiles as File[] | undefined;
+        if (autoLoadFiles && autoLoadFiles.length > 0) {
+            hasAutoLoaded.current = true;
+            const fileList = new DataTransfer();
+            autoLoadFiles.forEach(file => fileList.items.add(file));
+            handleFileSelect(fileList.files);
+            window.history.replaceState({}, '');
+        }
+    }, []);
 
     // Cleanup Object URLs on unmount
     useEffect(() => {

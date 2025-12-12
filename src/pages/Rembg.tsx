@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useDPIInjector } from '../hooks/useDPIInjector';
 import { imageToCanvas, canvasToBlob, getExtensionFromMimeType, createThumbnail } from '../utils/canvasHelpers';
 import { removeBackground } from '@imgly/background-removal';
@@ -16,15 +16,31 @@ interface ProcessedImage {
 
 const RemBg: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [images, setImages] = useState<ProcessedImage[]>([]);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [sliderPosition, setSliderPosition] = useState(50); // 0-100 for before/after slider
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const hasAutoLoaded = useRef(false);
     const { injectDPI } = useDPIInjector();
 
     // Auto settings: PNG + 300 DPI
     const format = 'png';
     const podMode = true;
+
+    // Auto-load files from Craft Modal
+    useEffect(() => {
+        if (hasAutoLoaded.current) return;
+
+        const autoLoadFiles = location.state?.autoLoadFiles as File[] | undefined;
+        if (autoLoadFiles && autoLoadFiles.length > 0) {
+            hasAutoLoaded.current = true;
+            const fileList = new DataTransfer();
+            autoLoadFiles.forEach(file => fileList.items.add(file));
+            handleFileSelect(fileList.files);
+            window.history.replaceState({}, '');
+        }
+    }, []);
 
     // Cleanup Object URLs on unmount
     useEffect(() => {

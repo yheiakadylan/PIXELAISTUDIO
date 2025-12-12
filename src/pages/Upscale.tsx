@@ -1,5 +1,5 @@
-import React, { useState, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface UpscaledImage {
     id: string;
@@ -21,11 +21,27 @@ type ScaleRate = 2 | 4 | 8;
 
 const Upscale: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [image, setImage] = useState<UpscaledImage | null>(null);
     const [model, setModel] = useState<ModelType>('photo');
     const [scaleRate, setScaleRate] = useState<ScaleRate>(2);
     const [zoom, setZoom] = useState(100); // 100 = 100%
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const hasAutoLoaded = useRef(false);
+
+    // Auto-load from Craft Modal (single file only)
+    useEffect(() => {
+        if (hasAutoLoaded.current) return;
+
+        const autoLoadFiles = location.state?.autoLoadFiles as File[] | undefined;
+        if (autoLoadFiles && autoLoadFiles.length > 0) {
+            hasAutoLoaded.current = true;
+            const fileList = new DataTransfer();
+            fileList.items.add(autoLoadFiles[0]); // Only first file
+            handleFileSelect(fileList.files);
+            window.history.replaceState({}, '');
+        }
+    }, []);
 
     const handleFileSelect = async (files: FileList | null) => {
         if (!files || files.length === 0) return;

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useDPIInjector } from '../hooks/useDPIInjector';
 import { imageToCanvas, resizeCanvas, canvasToBlob, getExtensionFromMimeType, createThumbnail } from '../utils/canvasHelpers';
 
@@ -14,6 +14,7 @@ interface UploadedImage {
 
 const Resize: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [images, setImages] = useState<UploadedImage[]>([]);
     const [resizeMode, setResizeMode] = useState<'pixels' | 'percentage'>('pixels');
     const [width, setWidth] = useState(1024);
@@ -25,7 +26,22 @@ const Resize: React.FC = () => {
     const [format, setFormat] = useState<'png' | 'jpg' | 'webp'>('png');
     const [podMode, setPodMode] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const hasAutoLoaded = useRef(false);
     const { injectDPI } = useDPIInjector();
+
+    // Auto-load files from navigation state (Craft Modal)
+    useEffect(() => {
+        if (hasAutoLoaded.current) return; // Prevent double-load
+
+        const autoLoadFiles = location.state?.autoLoadFiles as File[] | undefined;
+        if (autoLoadFiles && autoLoadFiles.length > 0) {
+            hasAutoLoaded.current = true;
+            const fileList = new DataTransfer();
+            autoLoadFiles.forEach(file => fileList.items.add(file));
+            handleFileSelect(fileList.files);
+            window.history.replaceState({}, '');
+        }
+    }, []);
 
     // Cleanup Object URLs on unmount
     useEffect(() => {

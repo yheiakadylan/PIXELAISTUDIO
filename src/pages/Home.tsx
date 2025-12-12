@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import CraftModal from '../components/CraftModal';
 
 const Home: React.FC = () => {
     const navigate = useNavigate();
+    const [showCraftModal, setShowCraftModal] = useState(false);
     const [darkMode, setDarkMode] = useState(false);
 
     useEffect(() => {
@@ -106,7 +108,7 @@ const Home: React.FC = () => {
                             </button>
                             <button
                                 className="hidden sm:inline-flex items-center justify-center px-6 py-3 border-4 border-black dark:border-white text-xs font-display text-white bg-green-600 hover:bg-green-500 shadow-retro active:shadow-retro-active active:translate-x-1 active:translate-y-1 transition-all"
-                                onClick={() => navigate('/resize')}
+                                onClick={() => setShowCraftModal(true)}
                             >
                                 Start Crafting
                             </button>
@@ -204,6 +206,12 @@ const Home: React.FC = () => {
                     </div>
                 </div>
             </footer>
+
+            {/* Craft Modal */}
+            <CraftModal
+                isOpen={showCraftModal}
+                onClose={() => setShowCraftModal(false)}
+            />
         </div>
     );
 };
