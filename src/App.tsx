@@ -1,9 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
-import Convert from './pages/Convert';
 import Resize from './pages/Resize';
-import Rembg from './pages/Rembg';
-import Upscale from './pages/Upscale';
+import Convert from './pages/Convert';
+import RemBg from './pages/RemBg';
+import Upscaler from './pages/Upscaler';
 import './index.css';
 
 function App() {
@@ -11,10 +11,10 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/convert" element={<Convert />} />
         <Route path="/resize" element={<Resize />} />
-        <Route path="/rembg" element={<Rembg />} />
-        <Route path="/upscale" element={<Upscale />} />
+        <Route path="/convert" element={<Convert />} />
+        <Route path="/rembg" element={<RemBg />} />
+        <Route path="/upscaler" element={<Upscaler />} />
       </Routes>
     </Router>
   );
