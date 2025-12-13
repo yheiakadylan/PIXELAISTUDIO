@@ -84,7 +84,6 @@ const Upscale: React.FC = () => {
 
         if (!isReady) {
             setImage(prev => prev ? { ...prev, status: 'error' } : null);
-            alert('AI model is still loading. Please wait...');
             return;
         }
 
@@ -347,17 +346,58 @@ const Upscale: React.FC = () => {
                                     {/* Processing Overlay */}
                                     {image.status === 'processing' && (
                                         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 z-20">
-                                            <div className="bg-white dark:bg-gray-800 border-4 border-black p-8 shadow-retro">
-                                                <p className="font-display text-2xl mb-6 text-center">🤖 AI Upscaling...</p>
+                                            <div className="bg-white dark:bg-gray-800 border-4 border-black p-8 shadow-retro max-w-md">
+                                                <p className="font-display text-2xl mb-4 text-center">🤖 AI Upscaling...</p>
+                                                
+                                                {/* Status Messages */}
+                                                <div className="mb-4 text-center">
+                                                    {image.progress !== undefined && (
+                                                        <>
+                                                            {image.progress < 10 && (
+                                                                <p className="text-sm text-gray-700 dark:text-gray-300 animate-pulse">
+                                                                    🔄 Connecting to server...
+                                                                </p>
+                                                            )}
+                                                            {image.progress >= 10 && image.progress < 20 && (
+                                                                <p className="text-sm text-gray-700 dark:text-gray-300 animate-pulse">
+                                                                    📤 Uploading image to backend...
+                                                                </p>
+                                                            )}
+                                                            {image.progress >= 20 && image.progress < 50 && (
+                                                                <p className="text-sm text-gray-700 dark:text-gray-300 animate-pulse">
+                                                                    🤖 AI is analyzing and enhancing...
+                                                                </p>
+                                                            )}
+                                                            {image.progress >= 50 && image.progress < 80 && (
+                                                                <p className="text-sm text-gray-700 dark:text-gray-300 animate-pulse">
+                                                                    ✨ Applying details and refinements...
+                                                                </p>
+                                                            )}
+                                                            {image.progress >= 80 && image.progress < 100 && (
+                                                                <p className="text-sm text-gray-700 dark:text-gray-300 animate-pulse">
+                                                                    📥 Downloading enhanced result...
+                                                                </p>
+                                                            )}
+                                                        </>
+                                                    )}
+                                                </div>
+
                                                 <div className="w-80 h-8 bg-gray-200 border-4 border-black overflow-hidden relative">
                                                     <div
                                                         className="h-full bg-gradient-to-r from-green-500 to-blue-500 transition-all duration-300 absolute inset-0 shimmer"
-                                                        style={{ width: `${image.progress}%` }}
+                                                        style={{ width: `${image.progress || 0}%` }}
                                                     />
                                                     <span className="absolute inset-0 flex items-center justify-center text-gray-800 font-bold text-lg z-10">
-                                                        {image.progress}%
+                                                        {image.progress || 0}%
                                                     </span>
                                                 </div>
+                                                
+                                                {/* Warning for slow first request */}
+                                                {image.progress !== undefined && image.progress < 20 && (
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
+                                                        ⏱️ First request may take ~30s as server wakes up
+                                                    </p>
+                                                )}
                                             </div>
                                         </div>
                                     )}
