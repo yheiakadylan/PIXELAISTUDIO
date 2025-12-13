@@ -2,10 +2,14 @@
 export class SoundEffects {
     private audioContext: AudioContext;
     private enabled: boolean;
+    private musicEnabled: boolean;
+    private backgroundMusic: OscillatorNode | null = null;
+    private musicGainNode: GainNode | null = null;
 
     constructor() {
         this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
         this.enabled = localStorage.getItem('soundEnabled') !== 'false';
+        this.musicEnabled = localStorage.getItem('musicEnabled') === 'true';
     }
 
     toggle() {
@@ -13,7 +17,18 @@ export class SoundEffects {
         localStorage.setItem('soundEnabled', String(this.enabled));
     }
 
-    private playTone(frequency: number, duration: number, type: OscillatorType = 'square') {
+    toggleMusic() {
+        this.musicEnabled = !this.musicEnabled;
+        localStorage.setItem('musicEnabled', String(this.musicEnabled));
+
+        if (this.musicEnabled) {
+            this.startBackgroundMusic();
+        } else {
+            this.stopBackgroundMusic();
+        }
+    }
+
+    private playTone(frequency: number, duration: number, type: OscillatorType = 'square', volume: number = 0.3) {
         if (!this.enabled) return;
 
         const oscillator = this.audioContext.createOscillator();
@@ -25,16 +40,70 @@ export class SoundEffects {
         oscillator.frequency.value = frequency;
         oscillator.type = type;
 
-        gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+        gainNode.gain.setValueAtTime(volume, this.audioContext.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
 
         oscillator.start(this.audioContext.currentTime);
         oscillator.stop(this.audioContext.currentTime + duration);
     }
 
+    // Background Music - Looping retro melody
+    startBackgroundMusic() {
+        if (!this.musicEnabled || this.backgroundMusic) return;
+
+        const melody = [523, 587, 659, 698, 784, 698, 659, 587]; // C-D-E-F-G-F-E-D
+        let noteIndex = 0;
+
+        const playNote = () => {
+            if (!this.musicEnabled) return;
+
+            this.playTone(melody[noteIndex], 0.4, 'sine', 0.08);
+            noteIndex = (noteIndex + 1) % melody.length;
+
+            setTimeout(playNote, 500);
+        };
+
+        playNote();
+    }
+
+    stopBackgroundMusic() {
+        if (this.musicGainNode) {
+            this.musicGainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.5);
+        }
+        this.backgroundMusic = null;
+    }
+
     // Click/Button press
     click() {
         this.playTone(800, 0.1);
+    }
+
+    // Sword swing sound
+    swordSwing() {
+        if (!this.enabled) return;
+        // Swoosh sound - frequency sweep
+        for (let i = 0; i < 3; i++) {
+            setTimeout(() => this.playTone(600 - i * 100, 0.05, 'sawtooth', 0.2), i * 20);
+        }
+    }
+
+    // Combo hit sound
+    comboHit(comboCount: number) {
+        if (!this.enabled) return;
+        // Higher pitch for higher combos
+        const basePitch = 400;
+        const pitch = basePitch + (comboCount * 50);
+        this.playTone(Math.min(pitch, 1200), 0.1, 'square', 0.25);
+    }
+
+    // Achievement unlocked
+    achievement() {
+        if (!this.enabled) return;
+        // Triumphant fanfare
+        const notes = [523, 659, 784, 1047]; // C-E-G-C
+        notes.forEach((note, i) => {
+            setTimeout(() => this.playTone(note, 0.2, 'square', 0.3), i * 100);
+        });
     }
 
     // Success/Complete
@@ -71,6 +140,14 @@ export class SoundEffects {
     // Hover
     hover() {
         this.playTone(1200, 0.03);
+    }
+
+    // Power up
+    powerUp() {
+        if (!this.enabled) return;
+        for (let i = 0; i < 8; i++) {
+            setTimeout(() => this.playTone(300 + i * 100, 0.1, 'square', 0.2), i * 60);
+        }
     }
 }
 

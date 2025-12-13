@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { soundEffects } from '../utils/soundEffects';
 
 interface ComboCounterProps {
     onComboChange?: (combo: number) => void;
@@ -19,11 +20,16 @@ const ComboCounter: React.FC<ComboCounterProps> = ({ onComboChange }) => {
                 const newCombo = combo + 1;
                 setCombo(newCombo);
                 setIsVisible(true);
+
+                // Play combo hit sound (higher pitch for higher combos)
+                soundEffects.comboHit(newCombo);
+
                 onComboChange?.(newCombo);
             } else {
                 // Reset combo
                 setCombo(1);
                 setIsVisible(true);
+                soundEffects.comboHit(1);
                 onComboChange?.(1);
             }
 
@@ -55,8 +61,8 @@ const ComboCounter: React.FC<ComboCounterProps> = ({ onComboChange }) => {
             >
                 <div
                     className={`text-6xl font-display font-bold mb-2 ${combo >= 10 ? 'text-purple-500' :
-                            combo >= 5 ? 'text-red-500' :
-                                'text-yellow-500'
+                        combo >= 5 ? 'text-red-500' :
+                            'text-yellow-500'
                         }`}
                     style={{
                         textShadow: '4px 4px 0px rgba(0,0,0,0.5)',

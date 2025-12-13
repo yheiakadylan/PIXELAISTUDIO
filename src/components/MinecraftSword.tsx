@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { soundEffects } from '../utils/soundEffects';
 
 const MinecraftSword: React.FC = () => {
     const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
@@ -8,6 +9,9 @@ const MinecraftSword: React.FC = () => {
         const handleClick = (_e: MouseEvent) => {
             // Trigger slash animation
             setIsSlashing(true);
+
+            // Play sword swing sound
+            soundEffects.swordSwing();
 
             // Reset after animation completes
             setTimeout(() => {

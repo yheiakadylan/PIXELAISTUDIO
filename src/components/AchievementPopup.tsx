@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { soundEffects } from '../utils/soundEffects';
 
 export interface Achievement {
     id: string;
@@ -19,6 +20,10 @@ const AchievementPopup: React.FC<AchievementPopupProps> = ({ achievement, onClos
     useEffect(() => {
         if (achievement) {
             setVisible(true);
+
+            // Play achievement sound
+            soundEffects.achievement();
+
             const timer = setTimeout(() => {
                 setVisible(false);
                 setTimeout(onClose, 300);

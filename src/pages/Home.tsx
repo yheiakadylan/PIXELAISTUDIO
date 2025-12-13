@@ -30,6 +30,8 @@ const Home: React.FC = () => {
             document.documentElement.classList.add('dark');
         }
 
+
+
         // Super Mode activation: Press "S" 3 times
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key.toLowerCase() === 's') {
@@ -66,13 +68,14 @@ const Home: React.FC = () => {
     }, []);
 
 
-
     const toggleDarkMode = () => {
         const newMode = !darkMode;
         setDarkMode(newMode);
         localStorage.setItem('darkMode', String(newMode));
         document.documentElement.classList.toggle('dark');
     };
+
+
 
     const tools = [
         {
@@ -163,10 +166,11 @@ const Home: React.FC = () => {
                                 className="p-2 border-2 border-transparent hover:border-black dark:hover:border-white hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200 active:scale-95"
                                 onClick={() => {
                                     soundEffects.toggle();
+                                    soundEffects.toggleMusic();
                                     setSoundEnabled(!soundEnabled);
                                     soundEffects.click();
                                 }}
-                                title="Toggle Sound"
+                                title="Toggle Sound & Music"
                             >
                                 <span className="material-symbols-outlined">
                                     {soundEnabled ? 'volume_up' : 'volume_off'}
