@@ -3,16 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import CraftModal from '../components/CraftModal';
 import PixelCharacter from '../components/PixelCharacter';
 import FloatingClouds from '../components/FloatingClouds';
-import CursorTrail from '../components/CursorTrail';
 import AchievementPopup, { useAchievements } from '../components/AchievementPopup';
-import MinecraftSword from '../components/MinecraftSword';
 import Typewriter from '../components/Typewriter';
 import StatsCounter from '../components/StatsCounter';
 import { soundEffects } from '../utils/soundEffects';
 import ThemePicker from '../components/ThemePicker';
 import { loadSavedTheme } from '../utils/themes';
-import SwordTrail from '../components/SwordTrail';
-import ComboCounter from '../components/ComboCounter';
 
 const Home: React.FC = () => {
     const navigate = useNavigate();
@@ -24,7 +20,6 @@ const Home: React.FC = () => {
     const [showTitle, setShowTitle] = useState(false);
     const [soundEnabled, setSoundEnabled] = useState(true);
     const [showThemePicker, setShowThemePicker] = useState(false);
-    const [isShaking, setIsShaking] = useState(false);
     const { currentAchievement, unlockAchievement, clearCurrentAchievement } = useAchievements();
 
     useEffect(() => {
@@ -70,14 +65,7 @@ const Home: React.FC = () => {
         loadSavedTheme();
     }, []);
 
-    // Handle combo and screen shake
-    const handleComboChange = (combo: number) => {
-        if (combo >= 5 && combo % 5 === 0) {
-            // Trigger screen shake on multiples of 5
-            setIsShaking(true);
-            setTimeout(() => setIsShaking(false), 500);
-        }
-    };
+
 
     const toggleDarkMode = () => {
         const newMode = !darkMode;
@@ -142,12 +130,7 @@ const Home: React.FC = () => {
     ];
 
     return (
-        <div
-            className="min-h-screen bg-retro-bg dark:bg-retro-bg-dark transition-theme flex flex-col font-body text-xl text-gray-900 dark:text-gray-100 animate-fadeIn"
-            style={{
-                animation: isShaking ? 'screen-shake 0.5s ease-in-out' : 'none'
-            }}
-        >
+        <div className="min-h-screen bg-retro-bg dark:bg-retro-bg-dark transition-theme flex flex-col font-body text-xl text-gray-900 dark:text-gray-100 animate-fadeIn">
             {/* Background Pattern */}
             <div className="fixed inset-0 -z-10 bg-[linear-gradient(45deg,#c4c4c4_25%,transparent_25%,transparent_75%,#c4c4c4_75%,#c4c4c4),linear-gradient(45deg,#c4c4c4_25%,transparent_25%,transparent_75%,#c4c4c4_75%,#c4c4c4)] bg-[length:20px_20px] bg-[position:0_0,10px_10px] dark:bg-[linear-gradient(45deg,#222_25%,transparent_25%,transparent_75%,#222_75%,#222),linear-gradient(45deg,#222_25%,transparent_25%,transparent_75%,#222_75%,#222)]" />
 
@@ -338,15 +321,6 @@ const Home: React.FC = () => {
 
             {/* Cursor Trail - Disabled to show SwordTrail */}
             {/* {!superMode && <CursorTrail />} */}
-
-            {/* Sword Trail Effect */}
-            <SwordTrail />
-
-            {/* Minecraft Sword Click Effect */}
-            <MinecraftSword />
-
-            {/* Combo Counter */}
-            <ComboCounter onComboChange={handleComboChange} />
 
             {/* Achievement Popup */}
             <AchievementPopup
