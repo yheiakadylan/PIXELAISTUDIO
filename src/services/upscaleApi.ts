@@ -2,7 +2,7 @@
  * API client for backend upscaling service
  */
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'https://pixelai-backend-8ysa.onrender.com';
 
 export interface UpscaleOptions {
     modelType: 'photo' | 'anime';
