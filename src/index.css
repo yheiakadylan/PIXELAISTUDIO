@@ -146,6 +146,29 @@
     }
   }
 
+  /* Sword slash down animation (chopping motion) */
+  @keyframes sword-slash-down {
+    0% {
+      transform: translateY(-20px) rotate(20deg) scaleX(-1);
+      opacity: 0;
+    }
+
+    30% {
+      transform: translateY(0) rotate(0deg) scaleX(-1);
+      opacity: 1;
+    }
+
+    70% {
+      transform: translateY(30px) rotate(-45deg) scaleX(-1);
+      opacity: 1;
+    }
+
+    100% {
+      transform: translateY(50px) rotate(-60deg) scaleX(-1);
+      opacity: 0;
+    }
+  }
+
   /* Error shake animation */
   @keyframes shake-error {
 
