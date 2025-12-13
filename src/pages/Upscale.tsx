@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useUpscaler } from '../hooks/useUpscaler';
 
 interface UpscaledImage {
     id: string;
@@ -26,8 +27,12 @@ const Upscale: React.FC = () => {
     const [model, setModel] = useState<ModelType>('photo');
     const [scaleRate, setScaleRate] = useState<ScaleRate>(2);
     const [zoom, setZoom] = useState(100); // 100 = 100%
+    const [comparisonMode, setComparisonMode] = useState(false); // Before/After comparison
     const fileInputRef = useRef<HTMLInputElement>(null);
     const hasAutoLoaded = useRef(false);
+
+    // Initialize AI upscaler
+    const { upscale, isModelLoading, modelLoadProgress, error: upscalerError, isReady } = useUpscaler(model);
 
     // Auto-load from Craft Modal (single file only)
     useEffect(() => {
@@ -77,50 +82,41 @@ const Upscale: React.FC = () => {
     const processUpscale = async () => {
         if (!image) return;
 
+        if (!isReady) {
+            setImage(prev => prev ? { ...prev, status: 'error' } : null);
+            alert('AI model is still loading. Please wait...');
+            return;
+        }
+
         setImage(prev => prev ? { ...prev, status: 'processing', progress: 0 } : null);
 
         try {
-            // TODO: Replace with Real-ESRGAN API call
-            // For now, use placeholder - would need backend Python API
+            // Real AI upscaling with progress tracking
+            const upscaledDataUrl = await upscale(
+                image.original,
+                scaleRate,
+                (progress) => {
+                    setImage(prev => prev ? { ...prev, progress: Math.round(progress) } : null);
+                }
+            );
 
-            setImage(prev => prev ? { ...prev, progress: 30 } : null);
-
-            // Simulate processing
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            setImage(prev => prev ? { ...prev, progress: 60 } : null);
-
-            // Create placeholder upscaled (just resize for demo)
-            const targetWidth = image.originalWidth * scaleRate;
-            const targetHeight = image.originalHeight * scaleRate;
-
-            const canvas = document.createElement('canvas');
-            canvas.width = targetWidth;
-            canvas.height = targetHeight;
-            const ctx = canvas.getContext('2d')!;
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-
-            const img = new Image();
-            img.src = image.original;
-            await new Promise<void>((resolve) => {
-                img.onload = () => resolve();
+            // Get dimensions and size
+            const upscaledImg = new Image();
+            await new Promise<void>((resolve, reject) => {
+                upscaledImg.onload = () => resolve();
+                upscaledImg.onerror = reject;
+                upscaledImg.src = upscaledDataUrl;
             });
 
-            ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
-
-            setImage(prev => prev ? { ...prev, progress: 80 } : null);
-
-            const upscaled = canvas.toDataURL('image/png');
-            const blob = await new Promise<Blob>((resolve, reject) => {
-                canvas.toBlob((b) => b ? resolve(b) : reject(), 'image/png');
-            });
+            // Convert to blob to get size
+            const response = await fetch(upscaledDataUrl);
+            const blob = await response.blob();
 
             setImage(prev => prev ? {
                 ...prev,
-                upscaled,
-                upscaledWidth: targetWidth,
-                upscaledHeight: targetHeight,
+                upscaled: upscaledDataUrl,
+                upscaledWidth: upscaledImg.width,
+                upscaledHeight: upscaledImg.height,
                 upscaledSize: blob.size,
                 status: 'done',
                 progress: 100
@@ -129,6 +125,7 @@ const Upscale: React.FC = () => {
         } catch (error) {
             console.error('Upscaling error:', error);
             setImage(prev => prev ? { ...prev, status: 'error' } : null);
+            alert(error instanceof Error ? error.message : 'Upscaling failed');
         }
     };
 
@@ -176,6 +173,11 @@ const Upscale: React.FC = () => {
                         <p className="text-sm font-body text-gray-600 dark:text-gray-400">
                             AI-powered upscaling with Real-ESRGAN
                         </p>
+                        {upscalerError && (
+                            <p className="text-sm font-body text-red-600 dark:text-red-400 mt-2">
+                                ⚠️ {upscalerError}
+                            </p>
+                        )}
                     </div>
                 </div>
             </div>
@@ -224,7 +226,20 @@ const Upscale: React.FC = () => {
                             <div className="bg-white dark:bg-gray-800 border-4 border-black dark:border-gray-400 shadow-retro dark:shadow-retro-dark">
                                 {/* Preview Header */}
                                 <div className="flex items-center justify-between p-4 border-b-4 border-black dark:border-gray-400">
-                                    <h3 className="text-xl font-display">Preview</h3>
+                                    <div className="flex items-center gap-4">
+                                        <h3 className="text-xl font-display">Preview</h3>
+                                        {image.upscaled && (
+                                            <button
+                                                className={`px-4 py-2 border-4 border-black font-body text-sm transition-all ${comparisonMode
+                                                    ? 'bg-blue-500 text-white'
+                                                    : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300'
+                                                    }`}
+                                                onClick={() => setComparisonMode(!comparisonMode)}
+                                            >
+                                                {comparisonMode ? '👁️ Comparing' : '🔄 Compare Before/After'}
+                                            </button>
+                                        )}
+                                    </div>
                                     {image.upscaled && (
                                         <button
                                             className="px-6 py-3 bg-green-500 border-4 border-black text-white font-display hover:bg-green-600 transition-all duration-200 shadow-retro btn-lift flex items-center gap-2"
@@ -236,27 +251,104 @@ const Upscale: React.FC = () => {
                                     )}
                                 </div>
 
-                                {/* Image Container with Zoom */}
-                                <div className="relative bg-gray-100 dark:bg-gray-700 overflow-auto" style={{ height: '500px' }}>
-                                    <div className="flex items-center justify-center min-h-full p-4">
-                                        <img
-                                            src={image.upscaled || image.original}
-                                            alt="Preview"
-                                            style={{
-                                                maxHeight: '468px', // Fit to container (500px - padding)
-                                                width: 'auto',
-                                                transform: zoom !== 100 ? `scale(${zoom / 100})` : 'none',
-                                                transformOrigin: 'center',
-                                                transition: 'transform 0.2s'
-                                            }}
-                                        />
-                                    </div>
+                                {/* Image Container with Zoom or Comparison */}
+                                <div className="relative bg-gray-100 dark:bg-gray-700 overflow-hidden" style={{ height: '500px' }}>
+                                    {comparisonMode && image.upscaled ? (
+                                        // Split-Screen Before/After Comparison Mode
+                                        <div className="relative w-full h-full flex">
+                                            {/* Left Side - Original */}
+                                            <div className="relative w-1/2 h-full flex items-center justify-center bg-black border-r-2 border-white">
+                                                <img
+                                                    src={image.original}
+                                                    alt="Original"
+                                                    style={{
+                                                        maxHeight: '468px',
+                                                        maxWidth: '100%',
+                                                        width: 'auto',
+                                                        height: 'auto',
+                                                        transform: zoom !== 100 ? `scale(${zoom / 100})` : 'none',
+                                                        transformOrigin: 'center',
+                                                        imageRendering: 'pixelated',
+                                                    }}
+                                                />
+                                                {/* Original Info Overlay */}
+                                                <div className="absolute bottom-4 left-4 right-4 bg-black bg-opacity-80 text-white px-4 py-2 rounded font-body text-xs">
+                                                    <div className="font-bold">Original: {image.originalWidth} × {image.originalHeight} px</div>
+                                                    <div className="text-gray-300">Size: {formatBytes(image.originalSize)}</div>
+                                                </div>
+                                            </div>
+
+                                            {/* Center Divider */}
+                                            <div className="absolute top-0 bottom-0 left-1/2 w-1 bg-white shadow-lg z-10 -translate-x-1/2">
+                                                {/* Arrows indicator */}
+                                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1">
+                                                    <div className="bg-white border-2 border-black rounded-full p-2 shadow-lg">
+                                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                            <path d="M15 18l-6-6 6-6M9 18l-6-6 6-6" />
+                                                        </svg>
+                                                    </div>
+                                                    <div className="bg-white border-2 border-black rounded-full p-2 shadow-lg">
+                                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                            <path d="M9 18l6-6-6-6M15 18l6-6-6-6" />
+                                                        </svg>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Right Side - Upscaled */}
+                                            <div className="relative w-1/2 h-full flex items-center justify-center bg-black border-l-2 border-white">
+                                                <img
+                                                    src={image.upscaled}
+                                                    alt="Upscaled"
+                                                    style={{
+                                                        maxHeight: '468px',
+                                                        maxWidth: '100%',
+                                                        width: 'auto',
+                                                        height: 'auto',
+                                                        transform: zoom !== 100 ? `scale(${zoom / 100})` : 'none',
+                                                        transformOrigin: 'center',
+                                                    }}
+                                                />
+                                                {/* Upscaled Info Overlay */}
+                                                <div className="absolute bottom-4 left-4 right-4 bg-black bg-opacity-80 text-white px-4 py-2 rounded font-body text-xs">
+                                                    <div className="font-bold">AI Enhanced: {image.upscaledWidth} × {image.upscaledHeight} px</div>
+                                                    <div className="text-gray-300">Size: {formatBytes(image.upscaledSize!)} • {scaleRate}x upscale</div>
+                                                </div>
+                                            </div>
+
+                                            {/* Fullscreen Button */}
+                                            <button
+                                                className="absolute top-4 right-4 bg-black bg-opacity-60 hover:bg-opacity-80 text-white p-2 rounded transition-all z-10"
+                                                onClick={() => setZoom(zoom === 100 ? 200 : 100)}
+                                                title={zoom === 100 ? "Zoom in" : "Zoom out"}
+                                            >
+                                                <span className="material-symbols-outlined">
+                                                    {zoom === 100 ? 'zoom_in' : 'zoom_out'}
+                                                </span>
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        // Normal Preview Mode
+                                        <div className="flex items-center justify-center min-h-full p-4">
+                                            <img
+                                                src={image.upscaled || image.original}
+                                                alt="Preview"
+                                                style={{
+                                                    maxHeight: '468px',
+                                                    width: 'auto',
+                                                    transform: zoom !== 100 ? `scale(${zoom / 100})` : 'none',
+                                                    transformOrigin: 'center',
+                                                    transition: 'transform 0.2s'
+                                                }}
+                                            />
+                                        </div>
+                                    )}
 
                                     {/* Processing Overlay */}
                                     {image.status === 'processing' && (
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75">
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 z-20">
                                             <div className="bg-white dark:bg-gray-800 border-4 border-black p-8 shadow-retro">
-                                                <p className="font-display text-2xl mb-6 text-center">Upscaling Image...</p>
+                                                <p className="font-display text-2xl mb-6 text-center">🤖 AI Upscaling...</p>
                                                 <div className="w-80 h-8 bg-gray-200 border-4 border-black overflow-hidden relative">
                                                     <div
                                                         className="h-full bg-gradient-to-r from-green-500 to-blue-500 transition-all duration-300 absolute inset-0 shimmer"
@@ -266,6 +358,27 @@ const Upscale: React.FC = () => {
                                                         {image.progress}%
                                                     </span>
                                                 </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Model Loading Overlay */}
+                                    {isModelLoading && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 z-20">
+                                            <div className="bg-white dark:bg-gray-800 border-4 border-black p-8 shadow-retro">
+                                                <p className="font-display text-2xl mb-6 text-center">📦 Loading AI Model...</p>
+                                                <div className="w-80 h-8 bg-gray-200 border-4 border-black overflow-hidden relative">
+                                                    <div
+                                                        className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300 absolute inset-0 shimmer"
+                                                        style={{ width: `${modelLoadProgress}%` }}
+                                                    />
+                                                    <span className="absolute inset-0 flex items-center justify-center text-gray-800 font-bold text-lg z-10">
+                                                        {modelLoadProgress}%
+                                                    </span>
+                                                </div>
+                                                <p className="text-center mt-4 text-sm text-gray-600 dark:text-gray-400">
+                                                    {model === 'photo' ? 'ESRGAN-Thick (Photos)' : 'ESRGAN-Slim (Anime)'}
+                                                </p>
                                             </div>
                                         </div>
                                     )}
