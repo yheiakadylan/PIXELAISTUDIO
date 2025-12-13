@@ -1,0 +1,15 @@
+fastapi==0.115.5
+uvicorn[standard]==0.34.0
+python-multipart==0.0.19
+pillow==10.4.0
+numpy==1.26.4
+opencv-python-headless==4.10.0.84
+torch==2.2.2
+torchvision==0.17.2
+python-dotenv==1.0.1
+scipy==1.13.1
+lmdb==1.5.1
+yapf==0.43.0
+basicsr==1.4.2
+realesrgan==0.3.0
+tb-nightly
