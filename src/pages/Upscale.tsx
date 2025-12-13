@@ -31,8 +31,8 @@ const Upscale: React.FC = () => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const hasAutoLoaded = useRef(false);
 
-    // Initialize AI upscaler
-    const { upscale, isModelLoading, modelLoadProgress, error: upscalerError, isReady } = useUpscaler(model);
+    // Initialize API-based upscaler (no model param)
+    const { upscale } = useUpscaler();
 
     // Auto-load from Craft Modal (single file only)
     useEffect(() => {
@@ -82,11 +82,7 @@ const Upscale: React.FC = () => {
     const processUpscale = async () => {
         if (!image) return;
 
-        if (!isReady) {
-            setImage(prev => prev ? { ...prev, status: 'error' } : null);
-            return;
-        }
-
+        console.log('🎬 Upscale button clicked!', { model, scaleRate });
         setImage(prev => prev ? { ...prev, status: 'processing', progress: 0 } : null);
 
         try {
@@ -173,11 +169,7 @@ const Upscale: React.FC = () => {
                         <p className="text-sm font-body text-gray-600 dark:text-gray-400">
                             AI-powered upscaling with Real-ESRGAN
                         </p>
-                        {upscalerError && (
-                            <p className="text-sm font-body text-red-600 dark:text-red-400 mt-2">
-                                ⚠️ {upscalerError}
-                            </p>
-                        )}
+
                     </div>
                 </div>
             </div>
@@ -403,26 +395,7 @@ const Upscale: React.FC = () => {
                                         </div>
                                     )}
 
-                                    {/* Model Loading Overlay */}
-                                    {isModelLoading && (
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 z-20">
-                                            <div className="bg-white dark:bg-gray-800 border-4 border-black p-8 shadow-retro">
-                                                <p className="font-display text-2xl mb-6 text-center">📦 Loading AI Model...</p>
-                                                <div className="w-80 h-8 bg-gray-200 border-4 border-black overflow-hidden relative">
-                                                    <div
-                                                        className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300 absolute inset-0 shimmer"
-                                                        style={{ width: `${modelLoadProgress}%` }}
-                                                    />
-                                                    <span className="absolute inset-0 flex items-center justify-center text-gray-800 font-bold text-lg z-10">
-                                                        {modelLoadProgress}%
-                                                    </span>
-                                                </div>
-                                                <p className="text-center mt-4 text-sm text-gray-600 dark:text-gray-400">
-                                                    {model === 'photo' ? 'ESRGAN-Thick (Photos)' : 'ESRGAN-Slim (Anime)'}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    )}
+
                                 </div>
 
                                 {/* Zoom Controls */}
