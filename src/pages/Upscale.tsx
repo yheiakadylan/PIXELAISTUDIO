@@ -21,6 +21,11 @@ type ModelType = 'photo' | 'anime';
 type ScaleRate = 2 | 4 | 8;
 
 const Upscale: React.FC = () => {
+    // VERSION CHECK LOG
+    useEffect(() => {
+        console.log('🚀 Upscale Component v2.0 - Fix applied for Blob URL');
+    }, []);
+
     const navigate = useNavigate();
     const location = useLocation();
     const [image, setImage] = useState<UpscaledImage | null>(null);
