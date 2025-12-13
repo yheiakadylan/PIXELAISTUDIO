@@ -9,6 +9,8 @@ import MinecraftSword from '../components/MinecraftSword';
 import Typewriter from '../components/Typewriter';
 import StatsCounter from '../components/StatsCounter';
 import { soundEffects } from '../utils/soundEffects';
+import ThemePicker from '../components/ThemePicker';
+import { loadSavedTheme } from '../utils/themes';
 
 const Home: React.FC = () => {
     const navigate = useNavigate();
@@ -19,6 +21,7 @@ const Home: React.FC = () => {
     const [superMode, setSuperMode] = useState(false);
     const [showTitle, setShowTitle] = useState(false);
     const [soundEnabled, setSoundEnabled] = useState(true);
+    const [showThemePicker, setShowThemePicker] = useState(false);
     const { currentAchievement, unlockAchievement, clearCurrentAchievement } = useAchievements();
 
     useEffect(() => {
@@ -57,6 +60,11 @@ const Home: React.FC = () => {
     useEffect(() => {
         const timer = setTimeout(() => setShowTitle(true), 800);
         return () => clearTimeout(timer);
+    }, []);
+
+    // Load saved theme
+    useEffect(() => {
+        loadSavedTheme();
     }, []);
 
     const toggleDarkMode = () => {
@@ -166,6 +174,16 @@ const Home: React.FC = () => {
                             </button>
                             <button
                                 className="p-2 border-2 border-transparent hover:border-black dark:hover:border-white hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200 active:scale-95"
+                                onClick={() => {
+                                    setShowThemePicker(true);
+                                    soundEffects.click();
+                                }}
+                                title="Change Theme"
+                            >
+                                <span className="material-symbols-outlined">palette</span>
+                            </button>
+                            <button
+                                className="p-2 border-2 border-transparent hover:border-black dark:hover:border-white hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200 active:scale-95"
                                 onClick={toggleDarkMode}
                             >
                                 {darkMode ? (
@@ -175,7 +193,7 @@ const Home: React.FC = () => {
                                 )}
                             </button>
                             <button
-                                className="hidden sm:inline-flex items-center justify-center px-6 py-3 border-4 border-black dark:border-white text-xs font-display text-white bg-green-600 hover:bg-green-500 shadow-retro btn-lift transition-all duration-200"
+                                className="hidden sm:inline-flex items-center justify-center px-6 py-3 border-4 border-black dark:border-white text-xs font-display text-white bg-theme-primary hover:bg-theme-secondary shadow-retro btn-lift transition-all duration-200"
                                 onClick={() => {
                                     setShowCraftModal(true);
                                     soundEffects.click();
@@ -202,7 +220,7 @@ const Home: React.FC = () => {
                             <>
                                 <Typewriter text="Build Better Images" delay={80} />
                                 <br />
-                                <span className="text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 px-2 box-decoration-clone">
+                                <span className="text-theme-primary dark:text-theme-secondary bg-theme-primary/10 dark:bg-theme-primary/20 px-2 box-decoration-clone">
                                     <Typewriter text="With AI Blocks" delay={80} />
                                 </span>
                             </>
@@ -312,6 +330,9 @@ const Home: React.FC = () => {
                 achievement={currentAchievement}
                 onClose={clearCurrentAchievement}
             />
+
+            {/* Theme Picker */}
+            <ThemePicker isOpen={showThemePicker} onClose={() => setShowThemePicker(false)} />
         </div>
     );
 };

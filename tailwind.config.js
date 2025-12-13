@@ -13,6 +13,10 @@ export default {
         "retro-bg-dark": "#121212",
         "retro-card": "#ffffff",
         "retro-card-dark": "#2a2a2a",
+        // Theme system
+        'theme-primary': 'var(--color-primary, #3b82f6)',
+        'theme-secondary': 'var(--color-secondary, #10b981)',
+        'theme-accent': 'var(--color-accent, #8b5cf6)',
       },
       fontFamily: {
         display: ['"Press Start 2P"', 'cursive'],
