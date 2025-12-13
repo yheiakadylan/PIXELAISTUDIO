@@ -96,7 +96,8 @@ const Upscale: React.FC = () => {
                 scaleRate,
                 (progress) => {
                     setImage(prev => prev ? { ...prev, progress: Math.round(progress) } : null);
-                }
+                },
+                model  // Pass the selected model (photo or anime)
             );
 
             // Get dimensions and size
@@ -348,7 +349,7 @@ const Upscale: React.FC = () => {
                                         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 z-20">
                                             <div className="bg-white dark:bg-gray-800 border-4 border-black p-8 shadow-retro max-w-md">
                                                 <p className="font-display text-2xl mb-4 text-center">🤖 AI Upscaling...</p>
-                                                
+
                                                 {/* Status Messages */}
                                                 <div className="mb-4 text-center">
                                                     {image.progress !== undefined && (
@@ -391,7 +392,7 @@ const Upscale: React.FC = () => {
                                                         {image.progress || 0}%
                                                     </span>
                                                 </div>
-                                                
+
                                                 {/* Warning for slow first request */}
                                                 {image.progress !== undefined && image.progress < 20 && (
                                                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
