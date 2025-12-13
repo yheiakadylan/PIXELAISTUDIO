@@ -88,7 +88,7 @@ const Upscale: React.FC = () => {
         try {
             // Real AI upscaling with progress tracking
             const upscaledUrl = await upscale(
-                image.original,
+                image.file,
                 scaleRate,
                 (progress) => {
                     setImage(prev => prev ? { ...prev, progress: Math.round(progress) } : null);

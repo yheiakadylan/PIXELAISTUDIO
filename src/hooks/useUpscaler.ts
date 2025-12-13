@@ -36,7 +36,7 @@ export function useUpscaler() {
      * Upscale image using backend API
      */
     const upscale = useCallback(async (
-        imageDataUrl: string,
+        input: File | string,
         scaleRate: 2 | 4 | 8,
         onProgress?: (progress: number) => void,
         modelType: ModelType = 'photo'
@@ -57,8 +57,24 @@ export function useUpscaler() {
             setModelLoadProgress(10);
             onProgress?.(10);
 
-            // Convert data URL to File
-            const imageFile = dataURLtoFile(imageDataUrl, 'image.png');
+            // Prepare File object
+            let imageFile: File;
+
+            if (input instanceof File) {
+                imageFile = input;
+            } else if (typeof input === 'string') {
+                if (input.startsWith('data:')) {
+                    imageFile = dataURLtoFile(input, 'image.png');
+                } else if (input.startsWith('blob:')) {
+                    const response = await fetch(input);
+                    const blob = await response.blob();
+                    imageFile = new File([blob], 'image.png', { type: blob.type });
+                } else {
+                    throw new Error('Invalid image format');
+                }
+            } else {
+                throw new Error('Invalid image input');
+            }
 
             // Handle 8x upscaling (not supported by backend, use 4x)
             const actualScaleRate = scaleRate === 8 ? 4 : scaleRate;
