@@ -169,6 +169,43 @@
     }
   }
 
+  /* Fade out animation for trail particles */
+  @keyframes fade-out {
+    from {
+      opacity: 0.7;
+      transform: translate(0, 0) scale(1);
+    }
+
+    to {
+      opacity: 0;
+      transform: translate(0, 0) scale(0.3);
+    }
+  }
+
+  /* Screen shake animation for intense moments */
+  @keyframes screen-shake {
+
+    0%,
+    100% {
+      transform: translate(0, 0);
+    }
+
+    10%,
+    30%,
+    50%,
+    70%,
+    90% {
+      transform: translate(-10px, 5px);
+    }
+
+    20%,
+    40%,
+    60%,
+    80% {
+      transform: translate(10px, -5px);
+    }
+  }
+
   /* Error shake animation */
   @keyframes shake-error {
 

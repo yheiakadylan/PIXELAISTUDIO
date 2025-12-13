@@ -12,7 +12,7 @@ const MinecraftSword: React.FC = () => {
             // Reset after animation completes
             setTimeout(() => {
                 setIsSlashing(false);
-            }, 400);
+            }, 250);
         };
 
         const handleMouseMove = (e: MouseEvent) => {
@@ -37,13 +37,13 @@ const MinecraftSword: React.FC = () => {
                 }
             `}</style>
 
-            {/* Custom Cursor - Diamond Sword (same size as click sword) */}
+            {/* Custom Cursor - Diamond Sword with slash animation */}
             <div
                 className="fixed pointer-events-none z-[100]"
                 style={{
                     left: `${cursorPos.x}px`,
                     top: `${cursorPos.y}px`,
-                    transform: 'translate(-50%, -50%)',
+                    transform: 'translate(0, 0)', // Top-left corner at cursor
                 }}
             >
                 <img
@@ -52,7 +52,7 @@ const MinecraftSword: React.FC = () => {
                     className="w-16 h-16"
                     style={{
                         imageRendering: 'pixelated',
-                        animation: isSlashing ? 'sword-slash-down 400ms ease-out forwards' : 'none',
+                        animation: isSlashing ? 'sword-slash-down 111ms ease-out forwards' : 'none',
                         transform: isSlashing ? 'none' : 'scaleX(-1)',
                     }}
                 />
