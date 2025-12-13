@@ -87,7 +87,7 @@ const Upscale: React.FC = () => {
 
         try {
             // Real AI upscaling with progress tracking
-            const upscaledDataUrl = await upscale(
+            const upscaledUrl = await upscale(
                 image.original,
                 scaleRate,
                 (progress) => {
@@ -96,23 +96,19 @@ const Upscale: React.FC = () => {
                 model  // Pass the selected model (photo or anime)
             );
 
-            // Get dimensions and size
-            const upscaledImg = new Image();
-            await new Promise<void>((resolve, reject) => {
-                upscaledImg.onload = () => resolve();
-                upscaledImg.onerror = reject;
-                upscaledImg.src = upscaledDataUrl;
-            });
+            // Calculate estimated dimensions
+            const targetWidth = image.originalWidth * scaleRate;
+            const targetHeight = image.originalHeight * scaleRate;
 
-            // Convert to blob to get size
-            const response = await fetch(upscaledDataUrl);
+            // Get actual file size from Blob URL
+            const response = await fetch(upscaledUrl);
             const blob = await response.blob();
 
             setImage(prev => prev ? {
                 ...prev,
-                upscaled: upscaledDataUrl,
-                upscaledWidth: upscaledImg.width,
-                upscaledHeight: upscaledImg.height,
+                upscaled: upscaledUrl, // Use Blob URL directly
+                upscaledWidth: targetWidth,
+                upscaledHeight: targetHeight,
                 upscaledSize: blob.size,
                 status: 'done',
                 progress: 100
