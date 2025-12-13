@@ -3,11 +3,13 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      // Disable service worker in dev to prevent cache issues
+      injectRegister: mode === 'production' ? 'auto' : null,
       includeAssets: ['cursor-hand.png', 'cursor-pointer.png', 'icon-192.png', 'icon-512.png'],
       manifest: {
         name: 'PIXEL AI STUDIO',
@@ -66,4 +68,4 @@ export default defineConfig({
       }
     })
   ],
-})
+}))
